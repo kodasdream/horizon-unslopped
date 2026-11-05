@@ -1,0 +1,161 @@
+# Horizon Unslopped follows gerdaroot/Horizon-Offline-Launcher: when it publishes a launcher release,
+# this repository merges the upstream change into its own `main` and cuts its own `launcher@X.Y.Z`
+# release, built from this fork's source. Installed launchers update themselves from those releases
+# only, so the UI this fork rewrote stays; an upstream release can add a fix but can never put the
+# old night-sky look back.
+#
+# The merge is mechanical: `git merge --no-ff upstream/main`. When it conflicts (upstream touched a
+# file this fork rewrote), the job fails on purpose and opens a pull request-shaped issue saying
+# which files need a person; nothing half-merged is ever published.
+name: follow upstream
+
+on:
+  schedule:
+    # Every six hours: the launcher release train is at most a few a week, so this is often enough
+    # and cheap (the job exits in seconds when there is nothing new).
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Only report whether upstream has a launcher release this fork lacks
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: follow-upstream
+  cancel-in-progress: false
+
+env:
+  UPSTREAM: gerdaroot/Horizon-Offline-Launcher
+  # The release line this fork publishes on (`launcher@X.Y.Z`), kept in one place.
+  LAUNCHER_PREFIX: launcher@
+
+jobs:
+  follow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: What upstream has
+        id: upstream
+        run: |
+          set -euo pipefail
+          gh api "repos/$UPSTREAM/releases?per_page=100" > releases.json
+          # The newest upstream launcher tag, whatever its release state: that is the change to take.
+          newest=$(gh api "repos/$UPSTREAM/git/matching-refs/tags/$LAUNCHER_PREFIX" \
+            --jq '.[].ref' | sed 's|refs/tags/||' | sort -V | tail -1)
+          echo "newest=$newest" >> "$GITHUB_OUTPUT"
+          echo "Upstream's newest launcher tag: ${newest:-none}"
+          # This fork's newest launcher tag.
+          ours=$(git tag -l "$LAUNCHER_PREFIX*" | sort -V | tail -1)
+          echo "ours=$ours" >> "$GITHUB_OUTPUT"
+          echo "This fork's newest launcher tag: ${ours:-none}"
+          if [ -z "$newest" ]; then
+            echo "nothing=1" >> "$GITHUB_OUTPUT"
+          elif [ "$newest" = "$ours" ]; then
+            echo "nothing=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "nothing=0" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Merge upstream
+        id: merge
+        if: steps.upstream.outputs.nothing == '0' && inputs.dry_run != true
+        run: |
+          set -euo pipefail
+          git config user.name "horizon-unslopped"
+          git config user.email "cservidzsombor@gmail.com"
+          git remote add upstream "https://github.com/$UPSTREAM.git"
+          git fetch --no-tags upstream main
+          if git merge --no-ff --no-edit upstream/main; then
+            echo "status=merged" >> "$GITHUB_OUTPUT"
+          else
+            # Leave the tree exactly as it was: a conflicted merge is never pushed.
+            git merge --abort || true
+            echo "status=conflict" >> "$GITHUB_OUTPUT"
+            git diff --name-only upstream/main...HEAD > conflicted.txt || true
+            out=$( (git merge-tree --write-tree HEAD upstream/main 2>/dev/null || true) \
+              | grep -E '^[-+]{7} |CONFLICT' | head -40 || true)
+            { echo 'files<<EOF'; cat conflicted.txt; echo 'EOF'; } >> "$GITHUB_OUTPUT"
+            { echo 'conflicts<<EOF'; echo "$out"; echo 'EOF'; } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push the merge
+        if: steps.merge.outputs.status == 'merged'
+        run: |
+          set -euo pipefail
+          git push origin HEAD:main
+          echo "pushed $(git rev-parse --short HEAD)"
+
+      - name: Tag and release
+        id: release
+        if: steps.merge.outputs.status == 'merged'
+        run: |
+          set -euo pipefail
+          newest="${{ steps.upstream.outputs.newest }}"
+          # Our own patch number: upstream's version plus this fork's revision, so launchers on
+          # either side order it correctly and it never ties with anything upstream publishes.
+          base="${newest#$LAUNCHER_PREFIX}"
+          tag="${LAUNCHER_PREFIX}${base}.1"
+          while git rev-parse -q --verify "refs/tags/$tag" > /dev/null; do
+            tag="${tag%.*}.$(( ${tag##*.} + 1 ))"
+          done
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          git tag -a "$tag" -m "Horizon Unslopped ${tag#$LAUNCHER_PREFIX}: follows upstream $newest"
+          git push origin "$tag"
+          echo "Tagged $tag (following upstream $newest)"
+
+      - name: Report a conflict
+        if: steps.merge.outputs.status == 'conflict'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = [
+              'Upstream published a launcher release this fork could not merge cleanly, so no new',
+              'release was published: the new UI stays as it is until someone merges it by hand.',
+              '',
+              `Upstream tag: \`${process.env.NEWEST}\``,
+              '',
+              'Files changed since upstream:',
+              '```',
+              process.env.FILES || '(unknown)',
+              '```',
+              '',
+              'Conflicting hunks:',
+              '```',
+              process.env.CONFLICTS || '(none reported)',
+              '```',
+              '',
+              'To take it: `git fetch upstream main && git merge upstream/main`, resolve the UI files,',
+              'then push `main` and tag `launcher@<version>`. The launcher release workflow builds and',
+              'signs it.',
+            ].join('\n');
+            const title = `Upstream launcher ${process.env.NEWEST} needs a manual merge`;
+            const open = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo, state: 'open', per_page: 50,
+            });
+            const found = open.data.find((i) => i.title === title);
+            if (!found) {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo, title, body,
+              });
+            }
+        env:
+          NEWEST: ${{ steps.upstream.outputs.newest }}
+          FILES: ${{ steps.merge.outputs.files }}
+          CONFLICTS: ${{ steps.merge.outputs.conflicts }}
+        # `env` above may read earlier steps' outputs; `script` runs after them.
+
+      - name: Nothing to do
+        if: steps.upstream.outputs.nothing == '1'
+        run: echo "This fork already has upstream's newest launcher tag."

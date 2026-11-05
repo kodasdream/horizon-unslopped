@@ -1,6 +1,8 @@
-# Horizon Offline Launcher: tests on every push and pull request; a tag `launcher@1.2.3` builds the
-# launcher for Windows (with its installer), Linux and macOS, signs the checksums and publishes them
-# as a GitHub release, which launchers already installed update themselves from.
+# Horizon Unslopped: tests on every push and pull request; a tag `launcher@1.2.3` builds the
+# launcher for Windows (with its installer), Linux and macOS, signs the checksums with this fork's
+# own key and publishes them as a GitHub release of this repository. Installed launchers update
+# themselves from these releases only (`backend::REPO`), so an upstream launcher's release can never
+# put the old UI back.
 name: launcher
 
 on:
@@ -156,7 +158,7 @@ jobs:
         run: cargo run --locked --quiet -p horizon-release-sign -- verify --tag "$GITHUB_REF_NAME" dist
       - uses: softprops/action-gh-release@v2
         with:
-          name: Horizon Offline Launcher ${{ github.ref_name }}
+          name: Horizon Unslopped ${{ github.ref_name }}
           files: |
             dist/*
             install.ps1
