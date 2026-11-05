@@ -48,7 +48,6 @@ mod servers_page;
 mod shell;
 mod shortcut_page;
 mod skin_page;
-mod sky;
 mod specimen;
 mod switch_page;
 mod theme;
@@ -138,24 +137,6 @@ struct Crash {
     copied: bool,
 }
 
-/// The opening: the wordmark holds at least `OPENING_HOLD` (until the release
-/// list is in, at most `OPENING_MAX`), then the launcher appears over `OPENING_REVEAL`.
-const OPENING_HOLD: Duration = horizon_theme::OPENING_HOLD;
-const OPENING_MAX: Duration = horizon_theme::OPENING_MAX;
-const OPENING_REVEAL: Duration = horizon_theme::OPENING_REVEAL;
-
-/// The phase of the opening at one moment: how far the reveal has gone, 0 to 1.
-struct Opening {
-    /// Set on the first frame, so a slow start does not eat into the hold.
-    started: Option<Instant>,
-    reveal: Option<Instant>,
-    focus: FocusHandle,
-}
-
-fn ease_out_cubic(x: f32) -> f32 {
-    horizon_theme::ease_out_cubic(x)
-}
-
 enum Load<T> {
     Loading,
     Ready(T),
@@ -172,7 +153,6 @@ struct Launcher {
     content_scroll: Scrollbar,
     /// The rows of the page's long list (Versions, Patch notes) last drawn.
     long_list: cull::Cull,
-    opening: Option<Opening>,
     updates: Updates,
     checked: Option<Instant>,
     update_error: Option<String>,
@@ -364,10 +344,6 @@ struct Launcher {
     offline_name: Option<String>,
     /// The player's servers, for the sidebar until the Servers page has read them.
     side_servers: Vec<horizon_launcher::servers::Entry>,
-    /// The pixel art made for this window (`art.rs`), and pictures downloaded by URL.
-    sky: sky::Sky,
-    /// When the sky next asks for a frame, and the timer that will draw it.
-    sky_wake: Option<(Instant, gpui::Task<()>)>,
     /// The window's scale, as of its last frame, for art drawn outside `render`'s reach.
     scale: f32,
 }
@@ -446,15 +422,6 @@ impl Launcher {
             switches: 0,
             content_scroll: Scrollbar::default(),
             long_list: cull::Cull::default(),
-            opening: (!settings.skip_opening).then(|| {
-                let focus = cx.focus_handle();
-                window.focus(&focus, cx);
-                Opening {
-                    started: None,
-                    reveal: None,
-                    focus,
-                }
-            }),
             updates: Updates::default(),
             checked: None,
             update_error: None,
@@ -575,8 +542,6 @@ impl Launcher {
             shortcuts: Default::default(),
             offline_name: offline_name(),
             side_servers: horizon_launcher::servers::list(),
-            sky: sky::Sky::default(),
-            sky_wake: None,
             scale: window.scale_factor(),
         };
         this.reload_instances();
@@ -1706,9 +1671,9 @@ fn text(step: theme::Step) -> Div {
 /// A release's tag as a title: mono, so its digits read at a glance.
 fn version_tag(tag: &str) -> Div {
     div()
-        .font_family(theme::MONO)
-        .text_size(px(22.))
-        .line_height(px(28.))
+        .font_family(theme::FONT)
+        .text_size(px(15.))
+        .line_height(px(20.))
         .font_weight(FontWeight::MEDIUM)
         .child(
             horizon_launcher::nightly::label(tag)
@@ -1901,50 +1866,43 @@ fn switch(id: impl Into<SharedString>, on: bool, t: &Theme) -> Stateful<Div> {
     keyboard(div().id(id.clone()), &t)
         .relative()
         .flex_none()
-        .w(px(44.))
-        .h(px(24.))
-        .border_2()
-        .border_color(t.outline)
+        .w(px(34.))
+        .h(px(20.))
+        .rounded_full()
         .cursor_pointer()
-        .bg(if on { t.face } else { t.well })
+        .bg(if on { t.accent } else { t.raised })
+        .border_1()
+        .border_color(if on { t.accent } else { t.outline })
         .child(
             div()
                 .absolute()
                 .top(px(2.))
-                .size(px(16.))
+                .size(px(14.))
+                .rounded_full()
                 .bg(knob)
-                .child(
-                    div()
-                        .absolute()
-                        .bottom_0()
-                        .left_0()
-                        .right_0()
-                        .h(px(2.))
-                        .bg(if on { t.face_lip } else { t.lip }),
-                )
                 .with_animation(
                     ElementId::named_usize(id, on as usize),
                     Animation::new(theme::MOVE).with_easing(ease_out_quint()),
-                    move |d, p| d.left(px(if on { 2. + 20. * p } else { 22. - 20. * p })),
+                    move |d, p| d.left(px(if on { 2. + 14. * p } else { 16. - 14. * p })),
                 ),
         )
 }
 
 /// A section's title inside a page: a pixel icon in the accent and the name in the pixel face.
-fn section_title(label: &'static str, icon: &'static str, t: &Theme) -> Div {
+fn section_title(label: &'static str, _icon: &'static str, t: &Theme) -> Div {
     div()
         .flex()
         .items_center()
-        .gap(px(10.))
-        .child(blocks::icon(icon, 20., t.accent))
+        .h(px(24.))
         .child(
-            blocks::pixel(18., FontWeight::SEMIBOLD)
-                .text_color(t.ink)
+            text(theme::CAPTION)
+                .font_weight(FontWeight::MEDIUM)
+                .text_color(t.muted)
                 .child(tr(label)),
         )
 }
 
-/// A segmented control: a sunk track, the chosen segment a raised block.
+/// A segmented control: a rounded track and the chosen segment in a raised fill.
 fn segments<T: Copy + PartialEq + 'static>(
     id: &'static str,
     options: &[(T, &'static str)],
@@ -1959,9 +1917,8 @@ fn segments<T: Copy + PartialEq + 'static>(
         .flex_none()
         .p(px(2.))
         .gap(px(2.))
-        .border_2()
-        .border_color(t.outline)
-        .bg(t.well)
+        .rounded(px(theme::RADIUS))
+        .bg(t.raised)
         .children(options.iter().map(|&(value, label)| {
             let active = current == value;
             let pick = on_pick.clone();
@@ -1969,20 +1926,14 @@ fn segments<T: Copy + PartialEq + 'static>(
                 .relative()
                 .flex()
                 .items_center()
-                .h(px(theme::SEGMENT))
-                .px(px(14.))
-                .pb(px(2.))
-                .font_family(theme::PIXEL)
-                .text_size(px(14.))
+                .h(px(26.))
+                .px(px(12.))
+                .rounded(px(4.))
+                .font_family(theme::FONT)
+                .text_size(px(12.))
                 .font_weight(FontWeight::MEDIUM)
                 .cursor_pointer()
-                .when(active, |d| {
-                    d.bg(t.button).text_color(t.ink).children(blocks::edges(
-                        t.button_bevel,
-                        t.lip,
-                        3.,
-                    ))
-                })
+                .when(active, |d| d.bg(t.button).text_color(t.ink))
                 .when(!active, |d| {
                     d.text_color(t.muted).hover(move |s| s.text_color(t.ink))
                 })
@@ -2138,14 +2089,17 @@ fn slot_row(
     right: Option<AnyElement>,
     t: &Theme,
 ) -> Div {
-    blocks::panel(t)
+    // A row of one list, not a card: groups are separated by their heading, rows by a hairline.
+    div()
+        .relative()
         .flex()
         .items_center()
         .gap(px(16.))
-        .min_h(px(theme::ROW))
-        .mb(px(8.))
-        .px(px(16.))
-        .py(px(12.))
+        .min_h(px(52.))
+        .px(px(2.))
+        .py(px(10.))
+        .border_b_1()
+        .border_color(t.divider())
         .children(slot)
         .child(
             div()
@@ -2154,11 +2108,7 @@ fn slot_row(
                 .flex_1()
                 .min_w_0()
                 .gap(px(2.))
-                .child(
-                    blocks::pixel(16., FontWeight::MEDIUM)
-                        .text_color(t.ink)
-                        .child(name),
-                )
+                .child(text(theme::UI).text_color(t.ink).child(name))
                 .children(detail.map(|d| {
                     text(theme::CAPTION)
                         .text_color(t.muted)
@@ -2238,7 +2188,11 @@ fn thousands(n: u64) -> String {
 
 /// A mono line in upper case: the status above a title, the footer's links.
 fn caps(s: impl AsRef<str>) -> Div {
-    text(theme::MICRO).child(s.as_ref().to_uppercase())
+    div()
+        .font_family(theme::MONO)
+        .text_size(px(11.))
+        .line_height(px(16.))
+        .child(s.as_ref().to_string())
 }
 
 fn short(path: &std::path::Path) -> String {
@@ -2509,20 +2463,15 @@ impl Launcher {
             }
             _ => {}
         }
-        // Sculk's card above the links: seen without scrolling, on every page but Servers, which shows
-        // its wide banner. Tall where the sidebar has the height for it besides the wordmark, its rows
-        // (52 high each, under headings of 40) and the links, compact otherwise. After a while on
-        // screen a "Hide" beside its label puts it away for good.
+        // Sculk's line above the links, on every page but Servers, which shows its wide banner.
+        // A sponsor gets a line, not a card. After a while on screen a "Hide" beside its label puts
+        // it away for good.
+        let _ = (headings, rows);
         if self.page != Page::Servers && !self.settings.partner_hidden {
-            let free = f32::from(window.viewport_size().height)
-                - theme::TOPBAR
-                - 40. * headings as f32
-                - 52. * rows as f32
-                - 110.;
-            let mut side = div().relative().mb(px(8.)).child(partner::card(
+            let mut side = div().relative().my(px(10.)).child(partner::card(
                 "partner-side",
                 theme::SIDEBAR - 20.,
-                free < partner::TALL_HEIGHT,
+                true,
                 &t,
             ));
             if self.settings.partner_seen_secs >= partner::SEEN_BEFORE_HIDE {
@@ -3213,13 +3162,6 @@ impl Launcher {
                 cx.notify();
             },
         ));
-        let opening = switch("opening", !self.settings.skip_opening, &t).on_click(cx.listener(
-            |this, _: &ClickEvent, _, cx| {
-                this.settings.skip_opening = !this.settings.skip_opening;
-                this.settings.save();
-                cx.notify();
-            },
-        ));
         // Linux: the launcher's entry in the applications menu (`horizon_launcher::desktop`).
         let menu_entry = switch("desktop-entry", self.settings.desktop_entry(), &t).on_click(
             cx.listener(|this, _: &ClickEvent, _, cx| {
@@ -3335,7 +3277,7 @@ impl Launcher {
             },
         );
         let group = |label: &'static str, icon: &'static str| {
-            section_title(label, icon, &t).mt(px(20.)).mb(px(12.))
+            section_title(label, icon, &t).mt(px(28.)).mb(px(8.))
         };
         div()
             .flex()
@@ -3389,13 +3331,6 @@ impl Launcher {
                     .child(self.home_background_row(cx))
                     .child(self.language_row(cx))
                     .child(self.while_playing_row(n + 3, cx))
-                    .child(index_row(
-                        n + 3,
-                        tr("Show the opening"),
-                        Some(plain("The wordmark, while the release list loads.")),
-                        Some(opening.into_any_element()),
-                        &t,
-                    ))
                     .child(group("Network", "globe"))
                     .child(self.proxy_row(n + 4, cx))
                     .child(group("Game", "gamepad"))
@@ -4055,16 +3990,14 @@ impl Launcher {
             .as_ref()
             .filter(|(e, _)| e == tag)
             .map(|(_, e)| e.clone());
+        // A list row, not a card: a rule under it is the only chrome.
         div()
             .flex()
             .flex_col()
-            .gap(px(10.))
+            .gap(px(8.))
             .py(px(14.))
-            .px(px(16.))
-            .bg(t.panel)
-            .border_2()
-            .border_color(t.outline)
-            .children(blocks::edges(t.bevel, t.lip, theme::BEVEL))
+            .border_b_1()
+            .border_color(t.divider())
             .child(
                 div()
                     .relative()
@@ -4077,16 +4010,20 @@ impl Launcher {
                             .flex_col()
                             .flex_1()
                             .min_w_0()
-                            .gap(px(4.))
+                            .gap(px(2.))
                             .child(version_tag(tag).text_color(t.ink))
                             .child(caps(meta.join("  ·  ")).text_color(t.muted)),
                     )
-                    .children(selected.then(|| caps(tr("In use")).text_color(t.accent)))
+                    .children(selected.then(|| {
+                        div()
+                            .flex_none()
+                            .child(text(theme::CAPTION).text_color(t.accent).child(tr("In use")))
+                    }))
                     .child(
                         div()
                             .flex()
                             .justify_end()
-                            .w(px(190.))
+                            .w(px(180.))
                             .flex_none()
                             .child(right),
                     ),
@@ -4259,20 +4196,17 @@ impl Launcher {
                     .filter(|(t, _)| *t == tag)
                     .map(|(_, e)| e.clone());
                 let id = SharedString::from(format!("release-{tag}"));
+                // A list row: a rule under it is the only chrome, and the pointer tints it.
                 let row = div()
                     .id(id.clone())
                     .relative()
                     .flex()
                     .flex_col()
-                    .gap(px(10.))
+                    .gap(px(8.))
                     .py(px(14.))
-                    .px(px(16.))
-                    .mb(px(8.))
-                    .bg(t.panel)
-                    .border_2()
-                    .border_color(t.outline)
-                    .children(blocks::edges(t.bevel, t.lip, theme::BEVEL))
-                    .child(hover_layer(&id, t.raised, 0., 0.))
+                    .border_b_1()
+                    .border_color(t.divider())
+                    .child(hover_layer(&id, t.raised, 0., 12.))
                     .child(
                         div()
                             .relative()
@@ -4285,10 +4219,10 @@ impl Launcher {
                                     .flex_col()
                                     .flex_1()
                                     .min_w_0()
-                                    .gap(px(4.))
+                                    .gap(px(2.))
                                     .child(version_tag(&tag).text_color(t.ink))
                                     .child(
-                                        text(theme::UI)
+                                        text(theme::CAPTION)
                                             .text_color(t.muted)
                                             .truncate()
                                             .child(summary),
@@ -4308,7 +4242,7 @@ impl Launcher {
                                 div()
                                     .flex()
                                     .justify_end()
-                                    .w(px(190.))
+                                    .w(px(180.))
                                     .flex_none()
                                     .child(right),
                             ),
@@ -4511,7 +4445,6 @@ impl Render for Launcher {
             Page::Notes => self.notes_page(cx),
             Page::Settings => self.settings_page(cx),
         };
-        self.sky.free_replaced(window);
         // The new page fades in and rises a few pixels.
         let content = div()
             .relative()
@@ -4524,20 +4457,9 @@ impl Render for Launcher {
                 Animation::new(theme::ENTER).with_easing(ease_out_quint()),
                 |d, p| d.opacity(p).top(px(theme::RISE * (1. - p))),
             );
-        let (reveal, held) = self.opening_phase(window);
-        let ui = ease_out_cubic((reveal - 0.3) / 0.7);
-        if self.opening.is_none() && window.focused(cx).is_none() {
+        let _ = size;
+        if window.focused(cx).is_none() {
             window.focus(&self.root_focus, cx);
-        }
-        let (sky, next) = self.sky.render(
-            &t.night,
-            (size.width.into(), size.height.into()),
-            window.scale_factor(),
-            window.is_window_active(),
-            Instant::now(),
-        );
-        if let Some(next) = next {
-            self.wake_sky(next, cx);
         }
         let topbar = self.topbar(cx);
         let sidebar = self.sidebar(window, cx);
@@ -4578,8 +4500,6 @@ impl Render for Launcher {
                     .relative()
                     .flex()
                     .size_full()
-                    .opacity(ui)
-                    .top(px(theme::RISE * (1. - ui)))
                     .child(sidebar)
                     .child(
                         div()
@@ -4639,67 +4559,12 @@ impl Render for Launcher {
         if self.asking_owner() {
             root = root.child(self.owner_screen(cx));
         }
-        if let Some(opening) = &self.opening {
-            // The wordmark arrives letter by letter, then gives way to the launcher; a click or
-            // a key skips ahead.
-            let gone = 1. - ease_out_cubic(reveal / 0.6);
-            let word = div()
-                .flex()
-                .font_family(theme::PIXEL)
-                .text_size(px(theme::WORDMARK.px * 0.5))
-                .line_height(px(theme::WORDMARK.px * 0.5))
-                .font_weight(FontWeight::BOLD)
-                .text_color(t.ink)
-                .children("HORIZON".chars().enumerate().map(|(i, c)| {
-                    let at = held - i as f32 * theme::STAGGER.as_secs_f32() * 1.5;
-                    let p = ease_out_cubic(at / theme::ENTER.as_secs_f32());
-                    div()
-                        .relative()
-                        .opacity(p)
-                        .top(px(theme::RISE * 2. * (1. - p)))
-                        .child(c.to_string())
-                }));
-            root = root.child(
-                div()
-                    .id("opening")
-                    .track_focus(&opening.focus)
-                    .absolute()
-                    .top_0()
-                    .left_0()
-                    .size_full()
-                    .flex()
-                    .items_center()
-                    .justify_center()
-                    .bg(t.page.opacity(gone))
-                    .when(reveal == 0., |d| d.cursor_pointer())
-                    .child(
-                        div()
-                            .relative()
-                            .top(px(-24. * (1. - gone)))
-                            .opacity(gone)
-                            .child(word),
-                    )
-                    .when(reveal == 0., |d| {
-                        d.on_click(cx.listener(|this, _: &ClickEvent, _, cx| {
-                            this.skip_opening();
-                            cx.notify();
-                        }))
-                        .on_key_down(cx.listener(
-                            |this, _: &KeyDownEvent, _, cx| {
-                                this.skip_opening();
-                                cx.notify();
-                            },
-                        ))
-                    }),
-            );
-        }
         div()
             .flex()
             .flex_col()
             .relative()
             .size_full()
-            .bg(t.side)
-            .child(sky)
+            .bg(t.page)
             .children(titlebar::render(&t, window))
             .child(root.flex_1().min_h_0())
             .children(titlebar::resize_handles(window))
@@ -4707,28 +4572,6 @@ impl Render for Launcher {
 }
 
 impl Launcher {
-    /// Where the opening is: the reveal's progress (1 when there is no opening) and how long
-    /// the wordmark has been showing, in seconds.
-    fn opening_phase(&mut self, window: &mut Window) -> (f32, f32) {
-        let loaded = !matches!(self.releases, Load::Loading);
-        let Some(opening) = &mut self.opening else {
-            return (1., 10.);
-        };
-        let held = opening.started.get_or_insert_with(Instant::now).elapsed();
-        if opening.reveal.is_none() && ((held >= OPENING_HOLD && loaded) || held >= OPENING_MAX) {
-            opening.reveal = Some(Instant::now());
-        }
-        let reveal = opening.reveal.map_or(0., |at| {
-            at.elapsed().as_secs_f32() / OPENING_REVEAL.as_secs_f32()
-        });
-        if reveal >= 1. {
-            self.opening = None;
-            return (1., 10.);
-        }
-        window.request_animation_frame();
-        (reveal, held.as_secs_f32())
-    }
-
     /// `horizon-launcher benchmark`: scroll the page a little on every frame, back to the top at
     /// the bottom, so the frame times measure scrolling.
     fn bench_scroll(&mut self, window: &mut Window) {
@@ -4742,27 +4585,6 @@ impl Launcher {
         window.request_animation_frame();
     }
 
-    /// Draws the window again in `after`, when the sky next changes, unless a frame comes sooner.
-    fn wake_sky(&mut self, after: Duration, cx: &mut Context<Self>) {
-        let at = Instant::now() + after;
-        if self.sky_wake.as_ref().is_some_and(|(when, _)| *when <= at) {
-            return;
-        }
-        let timer = cx.spawn(async move |this, cx| {
-            cx.background_executor().timer(after).await;
-            let _ = this.update(cx, |this, cx| {
-                this.sky_wake = None;
-                cx.notify();
-            });
-        });
-        self.sky_wake = Some((at, timer));
-    }
-
-    fn skip_opening(&mut self) {
-        if let Some(opening) = &mut self.opening {
-            opening.reveal.get_or_insert_with(Instant::now);
-        }
-    }
 }
 
 actions!(horizon_launcher, [Quit, CloseWindow]);

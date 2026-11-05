@@ -3963,7 +3963,7 @@ pub fn {f}("
     }
 
     #[test]
-    fn the_accent_is_violet_unless_picked_and_an_unknown_one_keeps_the_rest() {
+    fn the_accent_is_the_palettes_unless_picked_and_an_unknown_one_keeps_the_rest() {
         use crate::themes::Accent;
         assert_eq!(Settings::parse("{}").accent, Accent::VIOLET);
         let teal =

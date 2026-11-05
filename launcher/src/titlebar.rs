@@ -53,18 +53,22 @@ pub fn render(theme: &Theme, window: &Window) -> Option<Div> {
         .gap(px(8.))
         .px(px(12.))
         .on_mouse_down(MouseButton::Left, |_, window, _| window.start_window_move())
-        .child(mark(16., theme))
-        .child(blocks::pixel(13., FontWeight::MEDIUM).child("Horizon Offline"));
+        .child(mark(14., theme))
+        .child(
+            blocks::pixel(12., FontWeight::MEDIUM)
+                .text_color(theme.muted)
+                .child("Horizon Offline"),
+        );
 
     let mut bar = div()
         .flex()
         .flex_none()
         .items_center()
-        .h(px(32.))
+        .h(px(30.))
         .bg(theme.side)
         .text_color(theme.muted)
         .border_b_1()
-        .border_color(theme.outline)
+        .border_color(theme.hairline())
         .child(drag);
 
     if controls.minimize {

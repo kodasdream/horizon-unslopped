@@ -31,11 +31,6 @@ fn every_accent_reads_as_well_as_the_violet() {
             // Text over a selected suggestion (the launcher's theme::SELECTION).
             let selected = contrast(p.ink, blend(p.accent, p.panel, 0.22));
             assert!(selected >= 4.5, "{what}: text on a selection {selected:.2}");
-            let (_, _, face) = hsl(p.face);
-            assert!(
-                hsl(p.face_bevel).2 > face && hsl(p.face_lip).2 < face,
-                "{what}"
-            );
             if let Some(want) = accent.hue() {
                 let (h, _, _) = hsl(p.face);
                 let off = ((h - want).rem_euclid(360.)).min((want - h).rem_euclid(360.));
@@ -114,7 +109,7 @@ fn a_picked_hue_is_any_degree_and_survives_settings_json() {
     assert_eq!(Accent::parse("217"), Some(Accent::custom(217.)));
     assert_eq!(Accent::custom(370.).name(), "10");
     assert_eq!(Accent::custom(212.).name(), "blue");
-    assert_eq!(Accent::VIOLET.name(), "violet");
+    assert_eq!(Accent::VIOLET.name(), "default");
     let saved = serde_json::to_string(&Accent::custom(217.5)).unwrap();
     assert_eq!(saved, "\"217.5\"");
     assert_eq!(

@@ -83,7 +83,10 @@ impl Launcher {
                     Some(n) if n > 0 => format!("{name} {n}"),
                     _ => name.to_string(),
                 };
-                shell::tab(format!("home-tab-{tab:?}"), &label, tab == open, &t).on_click(
+                // The in-page tabs are short, not top-bar tall: same look, smaller box.
+                shell::tab(format!("home-tab-{tab:?}"), &label, tab == open, &t)
+                    .h(px(32.))
+                    .on_click(
                     cx.listener(move |this, _: &ClickEvent, _, cx| {
                         this.home_tab = tab;
                         cx.notify();

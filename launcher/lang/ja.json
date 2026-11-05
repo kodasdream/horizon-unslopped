@@ -29,8 +29,6 @@
   "The launcher stays open while you play.": "プレイ中もランチャーを開いたままにします。",
   "The launcher goes down when the game starts, and comes back when it closes.": "ゲーム起動時はランチャーを最小化し、終了時に再表示します。",
   "The launcher hides when the game starts, and comes back when it closes.": "ゲーム起動時はランチャーを非表示にし、終了時に再表示します。",
-  "Show the opening": "起動アニメーションを表示",
-  "The wordmark, while the release list loads.": "リリース一覧の読み込み中にロゴアニメーションを表示します。",
   "{version} available": "{version} が利用可能です",
   "Up to date": "最新の状態です",
   "up to date": "最新の状態",
@@ -80,7 +78,6 @@
   "No cape": "ケープなし",
   "Default": "デフォルト",
   "Accent colour": "アクセントカラー",
-  "Horizon's violet by default. Every colour keeps text as easy to read.": "デフォルトはHorizonのバイオレット。どの色でもテキストの読みやすさを維持します。",
   "Choose": "選択",
   "Choose a picture…": "画像を選択…",
   "Landscape": "背景画像",
@@ -143,11 +140,6 @@
   "{time} in total · last played {when}": "合計 {time} · 最終プレイ {when}",
   "Not played yet": "未プレイ",
   "under a minute": "1分未満",
-  "PARTNER": "パートナー",
-  "Your Minecraft server, {online}.": "あなたのMinecraftサーバー、{online}。",
-  "24/7 online": "24時間365日オンライン",
-  "Ready in under a minute": "1分以内に準備完了",
-  "Get my server": "サーバーを取得",
   "15% off": "15%オフ",
   "Not prepared. Horizon needs the files of your own Minecraft {version}.": "未準備です。Horizonには、あなた自身のMinecraft {version}のファイルが必要です。",
   "Prepared for Minecraft {version}": "Minecraft {version}用に準備済み",
@@ -656,5 +648,8 @@
   "Found by itself in your launcher's folder. Or pick the {version}.jar file.": "ランチャーのフォルダーで自動的に見つかりました。または {version}.jar ファイルを選んでください。",
   "Minecraft jar": "Minecraft の jar",
   "This build of the launcher has no Microsoft sign-in (HORIZON_MSA_CLIENT_ID).": "このランチャーのビルドには Microsoft サインインがありません(HORIZON_MSA_CLIENT_ID)。",
-  "Offline launcher {version}": "オフラインランチャー {version}"
+  "Offline launcher {version}": "オフラインランチャー {version}",
+  "SPONSOR": "スポンサー",
+  "Minecraft hosting, 24/7": "Minecraft ホスティング（24/7）",
+  "A slate blue by default. Every colour keeps text as easy to read.": "既定ではスレートブルー。どの色でもテキストは読みやすく保たれます。"
 }

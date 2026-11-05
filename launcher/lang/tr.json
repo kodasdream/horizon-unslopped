@@ -29,8 +29,6 @@
   "The launcher stays open while you play.": "Siz oynarken başlatıcı açık kalır.",
   "The launcher goes down when the game starts, and comes back when it closes.": "Oyun başladığında başlatıcı simge durumuna küçültülür ve kapandığında geri döner.",
   "The launcher hides when the game starts, and comes back when it closes.": "Oyun başladığında başlatıcı gizlenir ve kapandığında geri döner.",
-  "Show the opening": "Açılış animasyonunu göster",
-  "The wordmark, while the release list loads.": "Sürüm listesi yüklenirken logo.",
   "{version} available": "{version} mevcut",
   "Up to date": "Güncel",
   "up to date": "güncel",
@@ -80,7 +78,6 @@
   "No cape": "Pelerin yok",
   "Default": "Varsayılan",
   "Accent colour": "Vurgu rengi",
-  "Horizon's violet by default. Every colour keeps text as easy to read.": "Varsayılan olarak Horizon moru. Her renk, metnin kolayca okunabilmesini sağlar.",
   "Choose": "Seç",
   "Choose a picture…": "Bir resim seç…",
   "Landscape": "Manzara",
@@ -143,11 +140,6 @@
   "{time} in total · last played {when}": "toplam {time} · son oynanma: {when}",
   "Not played yet": "Henüz oynanmadı",
   "under a minute": "bir dakikadan az",
-  "PARTNER": "İŞ ORTAĞI",
-  "Your Minecraft server, {online}.": "Minecraft sunucunuz, {online}.",
-  "24/7 online": "7/24 çevrimiçi",
-  "Ready in under a minute": "Bir dakikadan kısa sürede hazır",
-  "Get my server": "Sunucumu al",
   "15% off": "%15 indirim",
   "Not prepared. Horizon needs the files of your own Minecraft {version}.": "Hazırlanmadı. Horizon, kendi Minecraft {version} sürümünüzün dosyalarına ihtiyaç duyuyor.",
   "Prepared for Minecraft {version}": "Minecraft {version} için hazırlandı",
@@ -656,5 +648,8 @@
   "Found by itself in your launcher's folder. Or pick the {version}.jar file.": "Launcher klasöründe kendiliğinden bulundu. Ya da {version}.jar dosyasını seç.",
   "Minecraft jar": "Minecraft jar'ı",
   "This build of the launcher has no Microsoft sign-in (HORIZON_MSA_CLIENT_ID).": "Launcher'ın bu sürümünde Microsoft girişi yok (HORIZON_MSA_CLIENT_ID).",
-  "Offline launcher {version}": "Çevrimdışı launcher {version}"
+  "Offline launcher {version}": "Çevrimdışı launcher {version}",
+  "SPONSOR": "SPONSOR",
+  "Minecraft hosting, 24/7": "Minecraft barındırma, 7/24",
+  "A slate blue by default. Every colour keeps text as easy to read.": "Varsayılan olarak slate mavisi. Her renk metni okunur tutar."
 }

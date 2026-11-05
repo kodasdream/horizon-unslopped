@@ -1,61 +1,55 @@
-//! The launcher's night look ("Night" in `docs/design-system.md`): a pixel night sky that turns to
-//! a sunset at the bottom, plates over it only where text needs them, one violet for the main
-//! action, focus and progress, and Bricolage Grotesque (SIL OFL 1.1, `fonts/OFL-BricolageGrotesque.txt`).
-//! Light players get the same look at dawn ([`DAWN`]). The game's menus don't use it.
+//! The launcher's quiet look ("Quiet" in `docs/design-system.md`): one flat surface, hairlines, and
+//! text doing the work, with a single low-chroma accent for the one main action. There is no
+//! gradient, no sky, and no second hue: the palette is a neutral grey ramp and the accent is a
+//! desaturated slate blue, so a screen reads as a tool, not as a poster.
+//!
+//! The token names are the ones the launcher already used (`night`), kept so the screens that read
+//! them did not all have to change at once; [`NIGHT`] is the dark appearance and [`DAWN`] the light
+//! one. Type is Geist and Geist Mono, both already in [`crate::fonts`].
 use crate::{step, Blocks, Step, Web};
 
-/// The UI family (optical size 14: Regular, Medium, SemiBold, Bold) and the display family
-/// (Bold at optical size 72, for page and instance names). Mono stays [`crate::MONO`].
-pub const FONT: &str = "Bricolage Grotesque";
-pub const DISPLAY_FONT: &str = "Bricolage Grotesque Display";
+/// The UI family. The display face is the same family: a launcher has no display type.
+pub const FONT: &str = crate::FONT;
+pub const DISPLAY_FONT: &str = crate::FONT;
 
-/// Instance names and page titles, in [`DISPLAY_FONT`].
-pub const DISPLAY: Step = step(
-    "night-display",
-    56.,
-    Web::Fluid(40., 72.),
-    1.,
-    -0.035,
-    700,
-    false,
-);
-/// Section and card heads.
-pub const TITLE: Step = step("night-title", 20., Web::Fixed, 1.25, -0.01, 700, false);
+/// Page and instance names. Deliberately smaller than the old display cut: a 56 px name over a
+/// picture was the loudest part of the old look.
+pub const DISPLAY: Step = step("night-display", 26., Web::Fluid(22., 30.), 1.2, -0.02, 600, false);
+/// Section heads.
+pub const TITLE: Step = step("night-title", 15., Web::Fixed, 1.35, -0.005, 600, false);
 /// Text, rows, buttons and navigation.
-pub const UI: Step = step("night-ui", 14., Web::Fixed, 1.45, -0.005, 500, false);
+pub const UI: Step = step("night-ui", 13., Web::Fixed, 1.45, 0., 400, false);
 /// One-line states and details under a name ("Ready · 26.3").
-pub const CAPTION: Step = step("night-caption", 12., Web::Fixed, 1.4, 0., 400, false);
+pub const CAPTION: Step = step("night-caption", 11., Web::Fixed, 1.4, 0., 400, false);
 /// A screen uses two or three of these, plus [`crate::MICRO`] for paths and counts.
 pub const TYPE: [Step; 4] = [DISPLAY, TITLE, UI, CAPTION];
 
-/// Corners. A plate cuts each corner in two [`PIXEL_CORNER`] steps, like the sky's art, and its
-/// 1 px stroke follows the steps. The main action (an accent fill: Play, Create, Install) cuts one
-/// step. Other controls (buttons, fields, focus rings) round at [`RADIUS_CONTROL`]: at 1x a step
-/// vanishes on a pale fill and reads as notches on a thin ring. Pills are [`crate::RADIUS_PILL`],
-/// for chips only.
-pub const PIXEL_CORNER: f32 = 4.;
-pub const RADIUS_CONTROL: f32 = 8.;
+/// Corners: one radius for controls and plates, and a gentler one for large surfaces. The old look
+/// cut corners in pixel steps; these are plain arcs.
+pub const RADIUS_CONTROL: f32 = 6.;
+pub const RADIUS_PLATE: f32 = 8.;
+/// Kept for the call sites that still pass a step count: there are no stepped corners any more.
+pub const PIXEL_CORNER: f32 = 6.;
 /// The main action (Play) is taller than the other controls.
-pub const PLAY: f32 = 56.;
+pub const PLAY: f32 = 44.;
 
-/// How many of the sky's stops, from the top, can sit behind text without a plate: the night's
-/// lower stops (the sunset) are too bright for light text, so text there always has a plate.
-pub const UNCARDED_STOPS: usize = 3;
+/// No stop of the surface is too bright for text: every stop of the surface is safe bare.
+pub const UNCARDED_STOPS: usize = 6;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Night {
-    /// The sky from the top of the window to the horizon, drawn in bands.
+    /// The six old sky stops. The surface is flat now, so these are six steps of one neutral ramp:
+    /// the first is the page, the last the faintest raised surface.
     pub sky: [u32; 6],
-    /// Behind everything before the sky is drawn, and the sidebar.
+    /// Behind everything, and the sidebar.
     pub page: u32,
     pub side: u32,
-    /// Plates over the sky (rows, cards, dialogs), with their opacity, and a raised or selected
-    /// one.
+    /// Plates (rows, cards, dialogs), with their opacity, and a raised or selected one.
     pub card: u32,
     pub card_alpha: f32,
     pub card_hi: u32,
     pub card_hi_alpha: f32,
-    /// The plates' 1 px inner stroke and the rules between rows: this colour at these opacities.
+    /// Hairlines: a plate's border and the rules between rows, at these opacities.
     pub stroke: u32,
     pub stroke_alpha: f32,
     pub rule_alpha: f32,
@@ -74,49 +68,52 @@ pub struct Night {
 }
 
 pub const NIGHT: Night = Night {
-    sky: [0x07061a, 0x140f38, 0x2a1656, 0x5b2a78, 0xb0477d, 0xf08a5d],
-    page: 0x0e0b26,
-    side: 0x0a0820,
-    card: 0x15112e,
-    card_alpha: 0.84,
-    card_hi: 0x231c4a,
-    card_hi_alpha: 0.90,
-    stroke: 0xb9acff,
-    stroke_alpha: 0.12,
-    rule_alpha: 0.10,
-    ink: 0xf4f2ff,
-    ink_soft: 0xcfc9ea,
-    muted: 0xa59fc6,
-    accent: 0x7656fa,
-    accent_hi: 0xa08cff,
-    on_accent: 0xffffff,
-    success: 0x5fd39a,
-    warn: 0xf5b45a,
-    danger: 0xff8a78,
+    // One neutral ramp, page to raised: no hue shift between them.
+    sky: [0x0c0c0e, 0x101013, 0x141418, 0x18181d, 0x1c1c22, 0x202027],
+    page: 0x0c0c0e,
+    side: 0x0f0f12,
+    card: 0x131317,
+    card_alpha: 1.,
+    card_hi: 0x1b1b21,
+    card_hi_alpha: 1.,
+    stroke: 0xffffff,
+    stroke_alpha: 0.07,
+    rule_alpha: 0.06,
+    ink: 0xedeef1,
+    ink_soft: 0xb9bbc4,
+    muted: 0x8f929c,
+    // A slate blue, desaturated on purpose: an accent that reads as a control, not as a brand.
+    accent: 0x5b7cfa,
+    accent_hi: 0x9db2ff,
+    on_accent: 0x0c0c0e,
+    success: 0x5fbf83,
+    warn: 0xd2a24a,
+    danger: 0xe0736a,
     dark: true,
 };
 
-/// The light appearance: the same sky at dawn, pale blue to peach, with the night's violet.
+/// The light appearance: the same neutral ramp, inverted, with the accent darkened to keep its
+/// contrast on white.
 pub const DAWN: Night = Night {
-    sky: [0xc9d3f2, 0xdcd8f3, 0xead5ec, 0xf5d3d8, 0xf9d6bd, 0xfbe4c6],
-    page: 0xe9e6f6,
-    side: 0xe1ddf1,
-    card: 0xfdfcff,
-    card_alpha: 0.86,
-    card_hi: 0xffffff,
-    card_hi_alpha: 0.94,
-    stroke: 0x3b2f78,
-    stroke_alpha: 0.12,
-    rule_alpha: 0.10,
-    ink: 0x1b1530,
-    ink_soft: 0x3b3354,
-    muted: 0x585071,
-    accent: 0x5b3fd6,
-    accent_hi: 0x5333c9,
+    sky: [0xf7f7f8, 0xf4f4f6, 0xf0f0f3, 0xebebef, 0xe6e6ea, 0xe0e0e5],
+    page: 0xf7f7f8,
+    side: 0xf2f2f4,
+    card: 0xffffff,
+    card_alpha: 1.,
+    card_hi: 0xf0f0f3,
+    card_hi_alpha: 1.,
+    stroke: 0x000000,
+    stroke_alpha: 0.10,
+    rule_alpha: 0.08,
+    ink: 0x17181c,
+    ink_soft: 0x4a4c55,
+    muted: 0x5f626b,
+    accent: 0x3a58c8,
+    accent_hi: 0x3149a8,
     on_accent: 0xffffff,
-    success: 0x136336,
-    warn: 0x7a4f00,
-    danger: 0xa3301d,
+    success: 0x1a6d3d,
+    warn: 0x805400,
+    danger: 0x9e3428,
     dark: false,
 };
 
@@ -129,8 +126,8 @@ pub fn over(top: u32, alpha: f32, under: u32) -> u32 {
 }
 
 impl Night {
-    /// These colours in the parts of the Blocks look the launcher still draws until each screen is
-    /// rebuilt: plates come out opaque over the page, with soft strokes instead of dark outlines.
+    /// These colours in the parts of the Blocks look the launcher still draws: plates come out
+    /// opaque over the page, with hairlines instead of dark outlines and bevels.
     pub fn blocks(&self) -> Blocks {
         let shade = |a: f32, under: u32| over(if self.dark { 0 } else { self.stroke }, a, under);
         let panel = over(self.card, self.card_alpha, self.page);
@@ -140,24 +137,24 @@ impl Night {
             side: self.side,
             panel,
             raised,
-            button: over(self.stroke, 0.10, raised),
-            button_bevel: over(self.stroke, 0.24, raised),
+            button: over(self.stroke, 0.06, raised),
+            button_bevel: over(self.stroke, 0.10, raised),
             well: if self.dark {
-                shade(0.3, self.side)
+                shade(0.5, self.side)
             } else {
                 over(self.card, 0.7, self.side)
             },
-            bevel: over(self.stroke, self.stroke_alpha * 1.5, panel),
-            lip: shade(if self.dark { 0.45 } else { 0.18 }, self.page),
-            outline: shade(if self.dark { 0.6 } else { 0.28 }, self.page),
+            bevel: over(self.stroke, self.stroke_alpha, panel),
+            lip: shade(0.0, self.page),
+            outline: over(self.stroke, self.stroke_alpha * 1.4, self.page),
             rule: over(self.stroke, self.rule_alpha, panel),
             ink: self.ink,
             ink_soft: self.ink_soft,
             muted: self.muted,
             accent: self.accent_hi,
             face: self.accent,
-            face_bevel: over(0xffffff, 0.22, self.accent),
-            face_lip: over(0, 0.35, self.accent),
+            face_bevel: self.accent,
+            face_lip: self.accent,
             on_face: self.on_accent,
             danger: self.danger,
             success: self.success,
@@ -214,13 +211,12 @@ mod tests {
     use super::*;
     use crate::contrast;
 
-    /// Every text colour reaches WCAG AA (4.5:1) on both plates over every stop of the sky, and
-    /// the sky's upper stops, the page and the sidebar hold the text drawn there without a plate.
-    /// The focus ring is `accent_hi`, so it is held to text contrast too.
+    /// Every text colour reaches WCAG AA (4.5:1) on both plates, the page and the sidebar, and the
+    /// focus ring reaches 3:1 (WCAG 1.4.11) on everything it is drawn on.
     #[test]
-    fn night_text_meets_wcag_aa_over_the_sky() {
+    fn quiet_text_meets_wcag_aa() {
         for p in [NIGHT, DAWN] {
-            let look = if p.dark { "night" } else { "dawn" };
+            let look = if p.dark { "dark" } else { "light" };
             let texts = [
                 ("ink", p.ink),
                 ("ink_soft", p.ink_soft),
@@ -230,31 +226,19 @@ mod tests {
                 ("warn", p.warn),
                 ("danger", p.danger),
             ];
-            for (i, &sky) in p.sky.iter().enumerate() {
-                for (plate, top, alpha) in [
-                    ("card", p.card, p.card_alpha),
-                    ("card_hi", p.card_hi, p.card_hi_alpha),
-                ] {
-                    let bg = over(top, alpha, sky);
-                    for (tn, fg) in texts {
-                        let ratio = contrast(fg, bg);
-                        assert!(
-                            ratio >= 4.5,
-                            "{look} {tn} on {plate} over sky {i}: {ratio:.2}"
-                        );
-                    }
+            let grounds = [
+                ("card", over(p.card, p.card_alpha, p.page)),
+                ("card_hi", over(p.card_hi, p.card_hi_alpha, p.page)),
+                ("page", p.page),
+                ("side", p.side),
+            ];
+            for (gn, bg) in grounds {
+                for (tn, fg) in texts {
+                    let ratio = contrast(fg, bg);
+                    assert!(ratio >= 4.5, "{look} {tn} on {gn}: {ratio:.2}");
                 }
-            }
-            let bare = p.sky[..UNCARDED_STOPS]
-                .iter()
-                .enumerate()
-                .map(|(i, &c)| (format!("sky {i}"), c))
-                .chain([("page".into(), p.page), ("side".into(), p.side)]);
-            for (bn, bg) in bare {
-                for (tn, fg) in &texts[..4] {
-                    let ratio = contrast(*fg, bg);
-                    assert!(ratio >= 4.5, "{look} {tn} on {bn}: {ratio:.2}");
-                }
+                let ring = contrast(p.accent, bg);
+                assert!(ring >= 3.0, "{look} the focus ring on {gn}: {ring:.2}");
             }
             let label = contrast(p.on_accent, p.accent);
             assert!(label >= 4.5, "{look} the main action's label: {label:.2}");

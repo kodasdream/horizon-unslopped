@@ -1,6 +1,6 @@
-//! The blocky look's parts (`docs/design-system.md`, "Blocks"): pixel type, pixel icons, panels
-//! with a dark outline, a light bevel on top and a darker lip below, sunk wells, badges, the
-//! inventory tabs, and the slots that hold icons downloaded at run time.
+//! The quiet look's smaller parts (`docs/design-system.md`): icons, text in the type scale,
+//! flat panels, badges, the tab strip, and the slots that hold icons downloaded at run time.
+//! The old blocky look's outlines, bevels and pixel type are gone.
 use crate::theme::{self, Theme};
 use gpui::{
     div, img, prelude::*, px, svg, AnyElement, App, ClickEvent, Div, FontWeight, Hsla, ImageSource,
@@ -22,7 +22,7 @@ impl gpui::AssetSource for Assets {
     fn list(&self, _path: &str) -> gpui::Result<Vec<SharedString>> {
         Ok(horizon_theme::icons::ALL
             .iter()
-            .map(|(name, _)| format!("icons/{name}.svg").into())
+            .map(|(name, _)| SharedString::from(format!("icons/{name}.svg")))
             .collect())
     }
 }
@@ -36,72 +36,51 @@ pub fn icon(name: &'static str, size: f32, color: Hsla) -> Svg {
         .text_color(color)
 }
 
-/// Text in the pixel face: headings, navigation, buttons, badges.
+/// Text at a size and weight in the UI family. Kept under its old name for the call sites; the
+/// pixel face it used to draw is gone.
 pub fn pixel(size: f32, weight: FontWeight) -> Div {
     div()
-        .font_family(theme::PIXEL)
+        .font_family(theme::FONT)
         .font_weight(weight)
         .text_size(px(size))
-        .line_height(px((size * 1.2).round()))
+        .line_height(px((size * 1.35).round()))
 }
 
-/// The light edge along the top of a raised block and the darker lip along its bottom; the
-/// block must be `relative`.
-pub fn edges(top: Hsla, bottom: Hsla, lip: f32) -> [AnyElement; 2] {
-    [
-        div()
-            .absolute()
-            .top_0()
-            .left_0()
-            .right_0()
-            .h(px(theme::BEVEL))
-            .bg(top)
-            .into_any_element(),
-        div()
-            .absolute()
-            .bottom_0()
-            .left_0()
-            .right_0()
-            .h(px(lip))
-            .bg(bottom)
-            .into_any_element(),
-    ]
+/// The old bevel and lip: the quiet look has neither. Kept as an empty slot so a call site that
+/// spread it still compiles and draws nothing.
+pub fn edges(_top: Hsla, _bottom: Hsla, _lip: f32) -> [AnyElement; 2] {
+    [div().into_any_element(), div().into_any_element()]
 }
 
-/// A panel: rows, cards, notices, dialogs.
+/// A panel: rows, cards, notices, dialogs. A flat fill, a hairline and one radius.
 pub fn panel(t: &Theme) -> Div {
     div()
         .relative()
+        .rounded(px(theme::RADIUS_PLATE))
         .bg(t.panel)
-        .border_2()
-        .border_color(t.outline)
-        .children(edges(t.bevel, t.lip, theme::BEVEL))
+        .border_1()
+        .border_color(t.hairline())
 }
 
-/// A small label in a block of its colour: "Runs", "Partly", a version.
+/// A small label in a tint of its colour: "Runs", "Partly", a version. A tint rather than an
+/// outlined badge, so a list of them stays quiet.
 pub fn badge(label: impl Into<SharedString>, color: Hsla, t: &Theme) -> Div {
     let label: SharedString = label.into();
     let label = SharedString::from(crate::i18n::tr(&label).to_string());
-    let tint = if t.dark { 0.14 } else { 0.12 };
+    let tint = if t.dark { 0.14 } else { 0.10 };
     div()
         .flex()
         .flex_none()
         .items_center()
-        .gap(px(6.))
-        .h(px(22.))
-        .px(px(8.))
+        .gap(px(5.))
+        .h(px(20.))
+        .px(px(7.))
+        .rounded(px(4.))
         .bg(color.opacity(tint))
-        .border_2()
-        .border_color(t.outline)
-        .child(div().size(px(6.)).bg(color))
-        .child(
-            pixel(12., FontWeight::MEDIUM)
-                .text_color(color)
-                .child(label),
-        )
+        .child(pixel(11., FontWeight::MEDIUM).text_color(color).child(label))
 }
 
-/// Inventory tabs: a row of tabs on top of a panel, the open one joined to it.
+/// A row of tabs over a panel: text only, the open one in ink with a rule under it.
 pub fn tabs<T: Copy + PartialEq + 'static>(
     id: &'static str,
     options: &[(T, &'static str, &'static str)],
@@ -112,9 +91,11 @@ pub fn tabs<T: Copy + PartialEq + 'static>(
     let t = *t;
     div()
         .flex()
-        .items_end()
-        .gap(px(4.))
-        .children(options.iter().map(|&(value, label, icon_name)| {
+        .items_center()
+        .gap(px(2.))
+        .border_b_1()
+        .border_color(t.divider())
+        .children(options.iter().map(|&(value, label, _icon_name)| {
             let open = current == value;
             let pick = on_pick.clone();
             let tab = div()
@@ -122,32 +103,26 @@ pub fn tabs<T: Copy + PartialEq + 'static>(
                 .relative()
                 .flex()
                 .items_center()
-                .gap(px(8.))
-                .h(px(if open { 42. } else { 38. }))
-                .px(px(14.))
-                .border_2()
-                .border_b_0()
-                .border_color(t.outline)
+                .h(px(36.))
+                .px(px(12.))
                 .cursor_pointer()
-                .bg(if open { t.panel } else { t.side })
                 .child(
-                    div()
-                        .absolute()
-                        .top_0()
-                        .left_0()
-                        .right_0()
-                        .h(px(theme::BEVEL))
-                        .bg(if open { t.bevel } else { t.raised }),
-                )
-                .child(icon(icon_name, 18., if open { t.accent } else { t.muted }))
-                .child(
-                    pixel(15., FontWeight::MEDIUM)
+                    pixel(13., FontWeight::MEDIUM)
                         .text_color(if open { t.ink } else { t.muted })
                         .child(crate::i18n::tr(label)),
                 )
-                .when(!open, |d| d.hover(move |s| s.bg(t.raised)))
-                // The open tab covers the panel's outline under it.
-                .when(open, |d| d.mb(px(-2.)))
+                .when(!open, |d| d.hover(move |s| s.text_color(t.ink)))
+                .when(open, |d| {
+                    d.child(
+                        div()
+                            .absolute()
+                            .bottom(px(-1.))
+                            .left_0()
+                            .right_0()
+                            .h(px(1.))
+                            .bg(t.ink),
+                    )
+                })
                 .on_click(move |_: &ClickEvent, window, cx| pick(value, window, cx));
             crate::keyboard(tab, &t)
         }))
@@ -162,14 +137,13 @@ pub fn slot(source: Option<ImageSource>, name: &str, size: f32, t: &Theme) -> Di
         .items_center()
         .justify_center()
         .size(px(size))
+        .rounded(px(4.))
         .overflow_hidden()
-        .border_2()
-        .border_color(t.outline)
-        .bg(t.well);
+        .bg(t.raised);
     match source {
-        Some(source) => frame.child(img(source).size(px(size - 4.)).object_fit(ObjectFit::Cover)),
-        None => frame.bg(t.raised).child(
-            pixel((size * 0.42).round(), FontWeight::BOLD)
+        Some(source) => frame.child(img(source).size(px(size)).object_fit(ObjectFit::Cover)),
+        None => frame.child(
+            pixel((size * 0.42).round(), FontWeight::MEDIUM)
                 .text_color(t.muted)
                 .child(
                     name.chars()

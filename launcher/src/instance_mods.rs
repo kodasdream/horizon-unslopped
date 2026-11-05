@@ -378,12 +378,7 @@ impl Launcher {
                 .py(px(16.))
                 .child(tr(s).to_string())
         };
-        let rule = |row: AnyElement| {
-            div()
-                .border_t_1()
-                .border_color(alpha(n.stroke, n.rule_alpha))
-                .child(row)
-        };
+        let rule = |row: AnyElement| div().border_b_1().border_color(t.divider()).child(row);
         let body = if !m.fresh {
             rule(empty("Reading the mods…").into_any_element())
         } else if m.list.is_empty() {
@@ -416,18 +411,15 @@ impl Launcher {
                         .is_some_and(|e| native_status::is_native_file(&e.file))
             });
         let build = native.then(|| self.native_build(cx)).flatten();
-        let card = plate::cut(
-            night::PIXEL_CORNER,
-            2,
-            // Nearly opaque: a list reads over the sunset.
-            Some(alpha(n.card, 0.94)),
-            Some((alpha(n.stroke, n.stroke_alpha), 1.)),
-        )
-        .flex()
-        .flex_col()
-        .child(header)
-        .children(build)
-        .child(body);
+        // The list is the page: no card around it, only a rule under the header.
+        let card = div()
+            .flex()
+            .flex_col()
+            .border_t_1()
+            .border_color(t.divider())
+            .child(header)
+            .children(build)
+            .child(body);
         (
             actions,
             div()

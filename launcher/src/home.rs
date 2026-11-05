@@ -111,8 +111,10 @@ impl Launcher {
                             .child(name.to_string()),
                     ),
             )
-            .children(instance.map(|i| {
-                shell::text(night::UI, c(n.ink_soft)).child(instances_page::played_line(i))
+            // When it was played, under the name: "Not played yet" says nothing the hero's caption
+            // doesn't, so it is left out.
+            .children(instance.filter(|i| i.last_played.is_some()).map(|i| {
+                shell::text(night::CAPTION, c(n.muted)).child(instances_page::played_line(i))
             }));
         // A Java instance (no Horizon tag) isn't offered Horizon's updates.
         if let Some(release) = self.updates.horizon.as_ref().filter(|_| !tag.is_empty()) {

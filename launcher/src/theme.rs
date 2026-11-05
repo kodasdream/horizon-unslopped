@@ -1,7 +1,7 @@
-//! The launcher's view of Horizon's design tokens (`crates/horizon-theme`, described in
-//! `docs/design-system.md`): the night look (`horizon_theme::night`, a night sky or a dawn with
-//! Horizon's violet) in Bricolage Grotesque, with Geist Mono for paths and codes (all bundled, SIL
-//! Open Font License). Screens not rebuilt yet draw the Blocks parts in the night's colours.
+//! The launcher's look (`crates/horizon-theme`, described in `docs/design-system.md`): one flat
+//! surface, hairline rules, and text doing the hierarchy, with a single low-chroma accent for the
+//! one main action. There is no sky, no gradient and no pixel-step corner: a screen is a list on a
+//! quiet background, and the only saturated colour is the accent, used once per screen.
 use gpui::{rgb, Hsla, WindowAppearance};
 use horizon_launcher::backend::Appearance;
 use horizon_launcher::themes::Accent;
@@ -9,37 +9,39 @@ use horizon_theme as tokens;
 use std::time::Duration;
 
 pub use tokens::night::{self, Night};
-pub use tokens::{Step, CAPTION, DISPLAY, HEADING, LABEL, MICRO, TITLE, UI, WORDMARK};
+pub use tokens::{Step, CAPTION, DISPLAY, HEADING, LABEL, MICRO, TITLE, UI};
 pub const FONT: &str = night::FONT;
 pub const DISPLAY_FONT: &str = night::DISPLAY_FONT;
 pub const MONO: &str = tokens::MONO;
-/// What the Blocks parts set in their pixel face (headings, navigation, buttons) until their
-/// screens are rebuilt: the night's UI family.
+/// Headings, navigation and buttons are in the UI family now: the pixel face is gone from the
+/// launcher's screens.
 pub const PIXEL: &str = night::FONT;
 
-pub use tokens::{BLOCK_BEVEL as BEVEL, BLOCK_LIP as LIP};
-/// Shapes and controls, shared with the game's menus and the website.
+/// The launcher no longer draws bevels or lips: kept at zero for the call sites that still ask,
+/// where they draw nothing.
+pub const BEVEL: f32 = 0.;
+pub const LIP: f32 = 0.;
 pub use tokens::{CONTROL_LARGE, DISABLED, FIELD, PRESSED, RISE, ROW, SEGMENT};
 
-/// Blocks have square corners: these stay for the places that ask for a radius.
-pub const RADIUS: f32 = 0.;
-pub const RADIUS_PLATE: f32 = 0.;
-/// Buttons are a little taller than the quiet look's, for their lip.
-pub const CONTROL: f32 = 34.;
+/// Corners are plain arcs at one radius.
+pub const RADIUS: f32 = night::RADIUS_CONTROL;
+pub const RADIUS_PLATE: f32 = night::RADIUS_PLATE;
+/// Buttons are a little taller than the fields beside them.
+pub const CONTROL: f32 = 32.;
 /// The top bar, and the sidebar of instances and servers.
-pub const TOPBAR: f32 = 56.;
-pub const SIDEBAR: f32 = 248.;
-pub const PAGE_GUTTER: f32 = 32.;
+pub const TOPBAR: f32 = 48.;
+pub const SIDEBAR: f32 = 236.;
+pub const PAGE_GUTTER: f32 = 28.;
 
 /// Motion: short and eased out, never bouncy.
 pub const QUICK: Duration = tokens::QUICK.duration();
 pub const MOVE: Duration = tokens::MOVE.duration();
 pub const ENTER: Duration = tokens::ENTER.duration();
-pub const STAGGER: Duration = tokens::STAGGER;
+
 
 #[derive(Clone, Copy)]
 pub struct Theme {
-    /// The page behind everything the sky doesn't cover.
+    /// The page behind everything.
     pub page: Hsla,
     /// Hover plates, fields and the console: the raised panel colour.
     pub plate_soft: Hsla,
@@ -70,7 +72,7 @@ pub struct Theme {
     pub face_bevel: Hsla,
     pub face_lip: Hsla,
     pub on_face: Hsla,
-    /// The night look's own tokens (the sky, plates with their opacity), for rebuilt screens.
+    /// The quiet look's own tokens (plates, hairline opacities), for the rebuilt screens.
     pub night: Night,
     pub dark: bool,
 }
@@ -138,6 +140,21 @@ impl Theme {
             night,
             dark: p.dark,
         }
+    }
+
+    /// The fill of a selected row: a flat tint of the raised colour, no border.
+    pub fn selected_fill(&self) -> Hsla {
+        c(self.night.card_hi)
+    }
+
+    /// A hairline: one pixel of the stroke colour at its plate opacity.
+    pub fn hairline(&self) -> Hsla {
+        c(self.night.stroke).opacity(self.night.stroke_alpha)
+    }
+
+    /// The fainter hairline between rows.
+    pub fn divider(&self) -> Hsla {
+        c(self.night.stroke).opacity(self.night.rule_alpha)
     }
 }
 

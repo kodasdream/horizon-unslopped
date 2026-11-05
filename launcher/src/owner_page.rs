@@ -11,7 +11,6 @@ impl Launcher {
         (self.owner_shown() == Some(false) || sign_in_preview())
             && (self.owner_screen_open || !self.settings.owner_notice_seen || sign_in_preview())
             && !self.asking_consent()
-            && self.opening.is_none()
     }
 
     /// `owner` as the window shows it: the developer option that lets offline names play without

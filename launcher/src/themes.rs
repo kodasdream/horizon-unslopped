@@ -18,10 +18,12 @@ pub struct Accent {
 }
 
 /// [`Accent::ALL`]'s names, in its order.
-const NAMES: [&str; 7] = ["violet", "blue", "teal", "green", "amber", "red", "pink"];
+const NAMES: [&str; 7] = ["default", "blue", "teal", "green", "amber", "red", "pink"];
 
 impl Accent {
     pub const VIOLET: Accent = Accent { hue: None };
+    /// The quiet look's own accent: the palette's slate blue.
+    pub const DEFAULT: Accent = Accent { hue: None };
     pub const BLUE: Accent = Accent { hue: Some(212.) };
     pub const TEAL: Accent = Accent { hue: Some(176.) };
     pub const GREEN: Accent = Accent { hue: Some(140.) };
@@ -53,7 +55,7 @@ impl Accent {
             .position(|a| *a == self)
             .map(|i| NAMES[i].to_owned());
         named.unwrap_or_else(|| match self.hue {
-            None => "violet".to_owned(),
+            None => "default".to_owned(),
             Some(hue) => format!("{hue}"),
         })
     }
@@ -61,10 +63,11 @@ impl Accent {
     /// A name, or a hue in degrees.
     pub fn parse(name: &str) -> Option<Self> {
         let name = name.trim().to_ascii_lowercase();
-        let name = if name == "purple" || name == "default" {
-            "violet"
-        } else {
-            &name
+        // "violet" and "purple" are what older settings files and links called the default, which
+        // is a slate blue now; both still name it so nothing breaks.
+        let name = match name.as_str() {
+            "violet" | "purple" | "default" => "default",
+            _ => &name,
         };
         if let Some(i) = NAMES.iter().position(|n| *n == name) {
             return Some(Self::ALL[i]);
@@ -89,18 +92,20 @@ impl Accent {
             let (_, s, l) = hsl(c);
             (hue, s, l)
         };
-        // The face holds white text.
-        let face = fit(turn(p.face), |c| contrast(p.on_face, c) >= 4.5, -1.);
-        let (_, _, face_l) = hsl(face);
-        let (h, s, l) = turn(p.face_bevel);
-        p.face_bevel = from_hsl(h, s, l.max(face_l + 0.08).min(0.92));
-        let (h, s, l) = turn(p.face_lip);
-        p.face_lip = from_hsl(h, s, l.min(face_l - 0.12).max(0.05));
+        // The face holds its label. The quiet look draws no bevel or lip on it: all three are the
+        // same flat fill. It is fitted from the middle of the lightness range, where a hue still
+        // reads as that hue: a dark label can only sit on a light fill and the other way round.
+        // A dark label needs a light fill and a light one a dark fill: the face moves away from the
+        // middle in the direction its label's contrast allows.
+        let lighter = if p.dark { 1. } else { -1. };
+        let face = fit(turn(p.face), |c| contrast(p.on_face, c) >= 4.5, 0.5, lighter);
         p.face = face;
+        p.face_bevel = face;
+        p.face_lip = face;
         // The accent marks things on every background: lighter on dark, darker on light.
         let grounds = [p.page, p.raised, p.button, p.panel, p.well];
         let reads = |c: u32| grounds.iter().all(|&g| contrast(c, g) >= 3.2);
-        p.accent = fit(turn(p.accent), reads, if p.dark { 1. } else { -1. });
+        p.accent = fit(turn(p.accent), reads, 0.5, if p.dark { 1. } else { -1. });
         p
     }
 }
@@ -164,17 +169,24 @@ fn from_hsl(h: f32, s: f32, l: f32) -> u32 {
     byte(r) << 16 | byte(g) << 8 | byte(b)
 }
 
-/// The colour, made lighter (`step` 1) or darker (-1) a little at a time until `good` holds.
-fn fit((h, s, l): (f32, f32, f32), good: impl Fn(u32) -> bool, step: f32) -> u32 {
-    let mut l = l;
-    for _ in 0..100 {
-        let c = from_hsl(h, s, l);
-        if good(c) || !(0.0..=1.0).contains(&l) {
-            return c;
-        }
-        l += step * 0.01;
+/// The colour, found by moving the lightness away from `start` in 1 % steps until `good` holds:
+/// `step` is 1 (lighter) or -1 (darker). The palette's own lightness is kept when it already works,
+/// so a hue shows at the lightness its tokens gave it.
+fn fit((h, s, l): (f32, f32, f32), good: impl Fn(u32) -> bool, start: f32, step: f32) -> u32 {
+    let at = |l: f32| from_hsl(h, s, l);
+    if good(at(l)) {
+        return at(l);
     }
-    from_hsl(h, s, l.clamp(0., 1.))
+    for i in 1..=100 {
+        let candidate = start + step * i as f32 * 0.01;
+        if !(0.0..=1.0).contains(&candidate) {
+            continue;
+        }
+        if good(at(candidate)) {
+            return at(candidate);
+        }
+    }
+    at(l.clamp(0., 1.))
 }
 
 /// The pictures Home can show: what the decoders read.
