@@ -40,7 +40,7 @@ fn report(panic: &str) -> String {
          {panic}\n\n\
          Backtrace:\n{}\n\n\
          Please attach this file to an issue: \
-         https://github.com/kodasdream/horizon-unslopped/issues/new\n",
+         https://github.com/kodasdream/horizon-unslopped/issues/new?template=crash.yml\n",
         backend::VERSION,
         chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
         std::env::consts::OS,
