@@ -1,5 +1,7 @@
 /.local/
 /target/
+# A crate built on its own (a tool run outside the root workspace) writes its own target/.
+**/target/
 **/__pycache__/
 *.py[cod]
 /.venv/
