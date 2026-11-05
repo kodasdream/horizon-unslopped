@@ -132,8 +132,8 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: runner.os == 'Windows'
         with:
-          name: Horizon-Offline-Launcher-Setup.exe
-          path: dist/Horizon-Offline-Launcher-Setup.exe
+          name: Horizon-Unslopped-Setup.exe
+          path: dist/Horizon-Unslopped-Setup.exe
 
   release:
     needs: [test, build]

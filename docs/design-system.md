@@ -134,13 +134,12 @@ Geist (400, 500, 600) and Geist Mono (400), bundled under the SIL Open Font Lice
 
 ## Surfaces
 
-- **Launcher** (`launcher/`): moving to the Night look below, screen by screen; screens not rebuilt
-  yet draw the Blocks parts in the night's colours (`Night::blocks`). A top bar (wordmark, the pages as
-  tabs, the account chip, Settings), a sidebar (the instances, the hosted servers, the launcher's
-  own version and channel at its foot), and the page over a stone texture. Home opens on a pixel
-  landscape banner with the hero, the version picker and Play; Mods holds the mod, resource pack
-  and modpack tabs; Versions and Patch notes are lists of panels; Settings is
-  grouped panels of rows. Dark by default, Light or System in Settings (Appearance).
+- **Launcher** (`launcher/`): the Quiet look below. A flat top bar (the pages as text tabs, the
+  account chip, Settings), a flat sidebar (the instances, the hosted servers, a sponsor line, the
+  launcher's own version at its foot), and the page on one neutral surface. Home opens on the
+  instance's name, Play, the version picker and the instance's tabs; Mods holds the mod, resource
+  pack and modpack tabs; Versions, a mod list and Patch notes are hairline-separated rows; Settings
+  is groups of rows under small labels. Dark by default, Light or System in Settings (Appearance).
 - **Website** (horizon-rust/horizon-site): the Blocks look below. The same page structure as before (what it
   is, screenshots, parity, launcher, patch notes, community), headings in Pixelify Sans, lists as
   stacks of panels, the stone texture behind the page and Horizon's pixel landscape (a dawn or a
@@ -151,7 +150,8 @@ Geist (400, 500, 600) and Geist Mono (400), bundled under the SIL Open Font Lice
 
 ## Blocks
 
-A blocky, Minecraft-like look in Horizon's purple, for the website and the redesigned launcher:
+A blocky, Minecraft-like look in Horizon's purple, for the upstream website (this fork's launcher
+does not use it; see "Quiet"):
 Minecraft's inventory rather than a document. Its colours are `horizon_theme::Blocks`
 (`BLOCKS_LIGHT`, `BLOCKS_DARK`), which `tokens.css` carries under the same names as before plus
 `--panel`, `--raised`, `--button`, `--well`, `--bevel`, `--lip`, `--outline` and the `--face`
@@ -192,112 +192,76 @@ of the main action. The game's menus keep `LIGHT` and `DARK`.
 - **Contrast**: every text colour meets WCAG AA (4.5:1) on the panels, the page and the lightest
   stone shade in both palettes (`blocks_text_meets_wcag_aa_in_both_appearances`).
 
-## Night
+## Quiet
 
-The launcher's look from 0.3: a pixel night sky that turns to a sunset at the horizon, with the
-content on top. Its tokens are `horizon_theme::night` (`NIGHT`, and `DAWN` for players who pick
-Light); `tokens.css` carries them as `--night-*`. The game's menus don't use it.
+This fork's look ("Quiet"): one flat surface, hairline rules, and text doing the hierarchy, with a
+single low-chroma accent. It replaced the launcher's earlier night-sky look (a violet gradient, a
+pixel sunset, stepped corners and a pixel display face), which is what made the launcher read as a
+poster rather than a tool. The game's menus don't use it.
 
-- **The sky is the brand, the content is the UI.** The sky, the stepped sun, the banded clouds and
-  the skyline are pixel art drawn in code on one grid per layer, edges crisp, never smoothed. On
-  top of it the screen is made of what the player owns: instance icons, world thumbnails, server
-  icons, their skin's head, mods and counts. No ornaments, no empty cards.
-- **Plates only where text needs them.** A plate is `card` at its opacity with a 1 px `stroke`;
-  `card_hi` for a selected or raised one. Text sits on the bare sky only over its upper stops
-  (`UNCARDED_STOPS`): the sunset is too bright for light text. A plate cuts each corner in two 4 px
-  steps (`PIXEL_CORNER`), like the art, and its stroke follows the steps. The main action cuts one
-  step; other controls round at 8 (at 1x a step vanishes on a pale fill and looks notched on a thin
-  ring: compared in the specimen).
-- **One accent.** `accent` fills the one main action (Play, Create, Install) and progress;
-  `accent_hi` is the accent as text and the 2 px focus ring. Everything else is ink on plates.
-- **Bricolage Grotesque** (SIL OFL 1.1, `fonts/OFL-BricolageGrotesque.txt`), cut from upstream's
-  variable font by `tools/bake_bricolage.py`: the UI family at optical size 14 (Regular, Medium,
-  SemiBold, Bold) and `Bricolage Grotesque Display` (Bold at optical size 72) for instance and page
-  names. Geist Mono stays for paths, codes and counts. Upstream has no Cyrillic, so the bake merges
-  Geist's (OFL, `fonts/OFL-Geist.txt`) into every cut: the letters drawn like Latin ones reuse
-  Bricolage's, the others are Geist's scaled to Bricolage's cap and x-heights at a matching weight.
-- **Two or three sizes per screen**, from `night::TYPE`:
+- **Nothing behind the content.** No sky, gradient, picture or texture behind a page. A screen is a
+  list on `page`, and the sidebar is `side`: two flat surfaces, one hairline between them.
+- **Flat shapes.** A plate is a fill, a 1 px border and one radius
+  (`RADIUS_PLATE` 8, controls `RADIUS_CONTROL` 6). There are no bevels, lips, outlines, cut corners
+  or shadows. A selected row is `card_hi` and nothing else; a hovered one is the same at 60 %.
+- **Type is the interface.** Geist only, at four sizes; a launcher's biggest type is an instance
+  name at 26 px, not a 56 px display cut. Geist Mono stays for paths, versions and counts. There is
+  no pixel face in the launcher.
+- **One accent, used once.** A desaturated slate blue fills the one main action on a screen (Play,
+  Create, Install) and the focus ring; links use it as text. Every other mark is ink on a plate.
+  Selection is shown in ink, never in colour.
+- **Lists, not cards.** Versions, settings rows, a mod list and patch notes are rows separated by a
+  hairline (`divider`). A group is named by a small `caption` label above it, not by a box around it.
+- **A sponsor is a line.** A sponsorship gets a `SPONSOR` label with a product line and a code, in
+  the launcher's own colours. No brand picture, no brand palette, no card filling the sidebar.
+- **Quiet motion.** Pages fade and rise 8 px; hovers fade in 150 ms; nothing bounces. The opening
+  wordmark animation is gone: the window draws its content directly.
 
-| Token           | App px | Line | Tracking (web) | Weight | Use |
-|-----------------|--------|------|----------------|--------|-----|
-| `night-display` | 56     | 1.0  | -0.035em       | 700    | instance and page names (display cut) |
-| `night-title`   | 20     | 1.25 | -0.01em        | 700    | section and card heads |
-| `night-ui`      | 14     | 1.45 | -0.005em       | 500    | text, rows, buttons, navigation |
-| `night-caption` | 12     | 1.4  | 0              | 400    | one-line states and details |
+### Tokens
 
-- **Colour** (night / dawn). Every text colour reaches AA on both plates over every stop of the sky,
-  and on the upper stops, the page and the sidebar (`night_text_meets_wcag_aa_over_the_sky`).
+The tokens are `horizon_theme::night` (`NIGHT` dark, `DAWN` light), named `--night-*` in
+`tokens.css` for the website.
 
-| Token       | Night     | Dawn      | Use |
-|-------------|-----------|-----------|-----|
-| `sky-0…5`   | `#07061a` `#140f38` `#2a1656` `#5b2a78` `#b0477d` `#f08a5d` | `#c9d3f2` `#dcd8f3` `#ead5ec` `#f5d3d8` `#f9d6bd` `#fbe4c6` | the sky, top to horizon |
-| `card`      | `#15112e` at 84 % | `#fdfcff` at 86 % | plates |
-| `card-hi`   | `#231c4a` at 90 % | `#ffffff` at 94 % | a selected or raised plate |
-| `stroke`, `rule` | `#b9acff` at 12 %, 10 % | `#3b2f78` at 12 %, 10 % | a plate's inner stroke, rules between rows |
-| `ink`       | `#f4f2ff` | `#1b1530` | text |
-| `ink-soft`  | `#cfc9ea` | `#3b3354` | secondary text |
-| `muted`     | `#a59fc6` | `#585071` | labels, details |
-| `accent`    | `#7656fa` | `#5b3fd6` | the main action, progress |
-| `accent-hi` | `#a08cff` | `#5333c9` | accent text, focus ring |
-| `success`, `warn`, `danger` | `#5fd39a` `#f5b45a` `#ff8a78` | `#136336` `#7a4f00` `#a3301d` | Ready, updates, errors |
+| Token | Dark | Light | Use |
+|-------|------|-------|-----|
+| `page` | `#0c0c0e` | `#f7f7f8` | the background |
+| `side` | `#0f0f12` | `#f2f2f4` | the sidebar |
+| `card` | `#131317` | `#ffffff` | plates: rows, cards, dialogs |
+| `card-hi` | `#1b1b21` | `#f0f0f3` | a selected or raised plate |
+| `stroke` | `#ffffff` at 7 % | `#000000` at 10 % | a plate's 1 px border |
+| `rule` | the same at 6 % / 8 % | | rules between rows |
+| `ink` | `#edeef1` | `#17181c` | text |
+| `ink-soft` | `#b9bbc4` | `#4a4c55` | secondary text |
+| `muted` | `#8f929c` | `#5f626b` | labels, details |
+| `accent` | `#5b7cfa` | `#3a58c8` | the main action, progress |
+| `accent-hi` | `#9db2ff` | `#3149a8` | accent text, the focus ring |
+| `on-accent` | `#0c0c0e` | `#ffffff` | the main action's label |
+| `success`, `warn`, `danger` | `#5fbf83` `#d2a24a` `#e0736a` | `#1a6d3d` `#805400` `#9e3428` | Ready, updates, errors |
 
-- **Motion that means something**: the sky drifts slowly and stops when the window is hidden or
-  unfocused; the interface moves only to show cause and effect (a row arrives where it was added,
-  progress fills). Reduced motion: nothing moves. The launcher's sky (`launcher/src/sky.rs`) moves
-  in whole texels on a half-second beat, so it asks for two frames a second at most;
-  `HORIZON_LAUNCHER_MOTION=off` stills it, `always` keeps it moving unfocused (for recordings).
-- **Copy says what happens** ("Downloads 26.3 and Java 21, about 600 MB"), never praises.
-- The specimen (`HORIZON_LAUNCHER_PAGE=specimen horizon-launcher`) draws the type and colours in the
-  launcher itself.
-- **The frame** (`launcher/src/shell.rs`): the sidebar is one plate from the window's top to its
-  bottom (the wordmark, instances by group, servers, the launcher's version); the top bar over the
-  pages has no plate, only a rule. A selected row or tab sits on `card_hi` cut in steps (two for
-  rows, one for tabs and icon buttons); a hovered one gets the same shape at half its opacity,
-  eased in. A row's second line is its state, after a small square in the state's colour.
-- **Home** (`launcher/src/home.rs`): the selected instance's name in the display cut over the bare
-  sky, a caption above it naming what it plays and its state (the same square), and when it was
-  played below. Play is the main action (`night::PLAY` tall, cut in one step); the version picker
-  is a raised control of the same height; Mods and Folder are quiet buttons. A Horizon instance
-  gets a plate on the right: a release's notes in one line (not a Nightly's) and Join a friend.
-  While it gets ready, Play names it ("Getting ready… 34%") beside Cancel, and below sit the
-  bar, what is happening with the time left, and the steps (game files, Java, sounds, prepare,
-  play), the current one lit, those done ticked: steps, never the log
-  (`HORIZON_LAUNCHER_PAGE=getting-ready` shows it for screenshots, nothing runs).
-- **Instance icons** (`launcher/src/instance_icons.rs`): the sidebar's rows, Home's hero (beside
-  the name) and the instance dialog show the same icon. Its own picture first (`icon.png` in its
-  game folder: one the player chose with Choose image…, scaled to 128 pixels, or its modpack's
-  icon from where it was installed), else the block or colour chosen in the dialog, else its
-  mark: the loader's logo (Fabric, Quilt, Forge, NeoForge), the grass block for plain Minecraft,
-  Horizon's for Horizon. The letter tile is the last resort. The New instance dialog's loader
-  cards show the same logos. Pixel-art logos are scaled by whole
-  pixels; each is decoded once per size.
-- **The instance's tabs** (`launcher/src/home_tabs.rs`): under Home's hero, one tab at a time
-  instead of one long page: Overview (what Play needs: the instance, the game or its resources,
-  the account), Worlds, Multiplayer, Packs, then Screenshots and Console once they have something.
-  A tab names how many it holds ("Worlds 3"); its own buttons (Add server, Open folder) sit at the
-  strip's end, where a list's header would put them (`HORIZON_LAUNCHER_PAGE=worlds`, `packs`...
-  opens one for screenshots).
-- **The Mods tab** (`launcher/src/instance_mods.rs`): the instance's mods on one nearly opaque
-  card, its loader in the header ("Fabric mods", "Horizon mods") beside a filter. A row is the
-  mod's own icon (Modrinth's, else its jar's, else a glyph), its name and version, where it comes from (Modrinth,
-  "needed by another mod", or a local file by name), an update as an amber pill when the browser
-  found one, and a switch (a Java jar turned off is renamed `.disabled`). Update all and Add mods
-  sit at the strip's end (`HORIZON_LAUNCHER_PAGE=instance-mods`).
-- **Sign in with Microsoft** (`launcher/src/microsoft.rs`): every button that signs in is
-  Microsoft's own, drawn as Microsoft publishes it: 41 pixels tall, its four-square symbol, the text
-  semibold at 15 pixels, `#2F2F2F` with white text at night, white with `#5E5E5E` text and a
-  `#8C8C8C` border at dawn, square corners. Not one of the launcher's cut plates: Microsoft's
-  guidelines ask for the button as it is.
-- **The sign-in sheet** (`launcher/src/owner_page.rs`, the owner gate): an opaque plate over the
-  dimmed launcher, never instead of it. It says why (the account that owns Java Edition, no install
-  needed), the code in mono on a raised box with Copy, and Open link as the main action; the window
-  goes on by itself once Microsoft answers (`HORIZON_LAUNCHER_PAGE=sign-in` shows it with a made-up
-  code for screenshots).
-- **New instance** (`launcher/src/new_instance.rs`): an opaque plate over the dimmed launcher,
-  tabs for the kind (Horizon, Vanilla, Modded). A Java kind lists Mojang's versions (search,
-  Snapshots, Old; the newest release chosen), Modded adds the loader (Fabric or Quilt, at its newest
-  stable version), and the name follows the choice ("Fabric 1.21.4") until the player types one.
-  Create is the main action.
+Every text colour reaches WCAG AA (4.5:1) on both plates, the page and the sidebar, and the focus
+ring reaches 3:1 (`night_text_meets_wcag_aa`, `marks_and_selections_read_clearly`). The palette is
+a neutral ramp with no hue shift between its steps: the only saturated colour in the launcher is
+the accent, and it appears at most once per screen.
+
+| Step | App px | Weight | Use |
+|------|--------|--------|-----|
+| `night-display` | 26 | 600 | instance and page names |
+| `night-title` | 15 | 600 | section heads, the main action's label |
+| `night-ui` | 13 | 400 | text, rows, navigation |
+| `night-caption` | 11 | 400 | one-line states, labels, details |
+
+### Surfaces
+
+- **The frame** (`launcher/src/shell.rs`): a flat sidebar with a hairline on its right edge, its
+  rows a tint when selected; a top bar of text tabs, the current one underlined in ink, with the
+  account chip and Settings on the right.
+- **Home** (`launcher/src/home.rs`): a caption naming what the instance plays, then its name at the
+  display size, then Play (the accent, 44 px tall), the version picker, Mods and Folder. No banner,
+  no picture behind it. A player's own background picture, if they chose one, is the only image.
+- **Plates** (`launcher/src/plate.rs`, `blocks.rs`): `plate()`, `panel()` and `badge()` are the only
+  shapes; `cut()` and `edges()` remain for call sites and now draw a plain rounded box and nothing.
+- **The specimen** (`HORIZON_LAUNCHER_PAGE=specimen horizon-launcher`) draws the type and colours in
+  the launcher itself.
 
 ## The mark
 

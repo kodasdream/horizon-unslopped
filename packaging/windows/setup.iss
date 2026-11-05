@@ -11,18 +11,18 @@
 #ifndef Source
   #define Source "..\..\launcher\target\release\horizon-launcher.exe"
 #endif
-#define AppName "Horizon Offline Launcher"
+#define AppName "Horizon Unslopped"
 #define AppExe "horizon-offline-launcher.exe"
 
 [Setup]
-AppId={{6F0C3B7E-4A1D-4C8B-9E52-3D7A1F2B8C90}
+AppId={{UNSLOPPED-6F0C3B7E-4A1D-4C8B-9E52-3D7A1F2B8C90}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
-AppPublisher=gerdaroot
-AppPublisherURL=https://github.com/gerdaroot/Horizon-Offline-Launcher
-AppSupportURL=https://github.com/gerdaroot/Horizon-Offline-Launcher/issues
-AppUpdatesURL=https://github.com/gerdaroot/Horizon-Offline-Launcher/releases
+AppPublisher=Horizon Unslopped
+AppPublisherURL=https://github.com/kodasdream/horizon-unslopped
+AppSupportURL=https://github.com/kodasdream/horizon-unslopped/issues
+AppUpdatesURL=https://github.com/kodasdream/horizon-unslopped/releases
 DefaultDirName={localappdata}\Programs\HorizonOfflineLauncher
 DisableDirPage=yes
 DisableProgramGroupPage=yes
@@ -30,7 +30,7 @@ DisableReadyPage=yes
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-OutputBaseFilename=Horizon-Offline-Launcher-Setup
+OutputBaseFilename=Horizon-Unslopped-Setup
 SetupIconFile=..\icons\horizon.ico
 UninstallDisplayIcon={app}\{#AppExe}
 UninstallDisplayName={#AppName}

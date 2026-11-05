@@ -1,27 +1,54 @@
-<h1 align="center">Horizon Offline Launcher</h1>
+<h1 align="center">Horizon Unslopped</h1>
 
 <p align="center">
-  <b>A launcher for <a href="https://github.com/horizon-rust/horizon">Horizon</a> (Minecraft: Java Edition 26.3 rewritten in Rust) that plays without a Microsoft account and lets you pick your own jar.</b>
+  <b>An unslopped version of the <a href="https://github.com/gerdaroot/Horizon-Offline-Launcher">Horizon Offline Launcher</a>: the same offline launcher for <a href="https://github.com/horizon-rust/horizon">Horizon</a> (Minecraft: Java Edition 26.3 rewritten in Rust), with the violet night sky, the pixel sunset and the beveled blocks taken out.</b>
 </p>
 
 <p align="center">
-  <a href="https://github.com/gerdaroot/Horizon-Offline-Launcher/releases/latest/download/Horizon-Offline-Launcher-Setup.exe"><b>Download for Windows</b></a> ·
-  <a href="#install">Install</a> ·
-  <a href="#first-run">First run</a> ·
-  <a href="#faq">FAQ</a> ·
-  <a href="#русский"><b>Русский</b></a>
+  <a href="https://github.com/kodasdream/horizon-unslopped/releases/latest"><b>Releases</b></a> ·
+  <a href="#what-changed">What changed</a> ·
+  <a href="https://github.com/gerdaroot/Horizon-Offline-Launcher#readme">Upstream README</a> ·
+  <a href="#install">Install</a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/gerdaroot/Horizon-Offline-Launcher/actions/workflows/launcher.yml"><img src="https://github.com/gerdaroot/Horizon-Offline-Launcher/actions/workflows/launcher.yml/badge.svg" alt="Build"></a>
+  <a href="https://github.com/kodasdream/horizon-unslopped/actions/workflows/launcher.yml"><img src="https://github.com/kodasdream/horizon-unslopped/actions/workflows/launcher.yml/badge.svg" alt="Build"></a>
   <img src="https://img.shields.io/badge/Minecraft-Java%2026.3-5D9C3F" alt="Minecraft Java 26.3">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-2A2470" alt="Windows, Linux, macOS">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-3B2F7E" alt="MIT"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-43444a" alt="MIT"></a>
 </p>
 
-<p align="center">
-  <img src="docs/media/launcher-play.webp" alt="The launcher's Home page" width="80%">
-</p>
+## What changed
+
+The launcher works exactly as upstream's does: offline play, your own jar, your own skin and cape,
+updates from this repository. Only the look is different.
+
+- **One flat surface instead of a night sky.** The violet gradient, the pixel sunset, the drifting
+  clouds, the twinkling stars, the skyline and the letter-by-letter wordmark opening are gone. The
+  window is one neutral grey, in dark and light.
+- **A neutral palette with one quiet accent.** A desaturated slate blue marks the one main action
+  (Play) and the focus ring, and nothing else on the screen competes with it. The purple is gone.
+- **Lists, not cards.** Versions, settings, mods and patch notes are rows with a hairline between
+  them, instead of a stack of outlined boxes.
+- **Plain shapes.** Flat fills, 1 px rules and one corner radius; no bevels, lips or pixel-cut
+  corners. Geist for everything, at four small sizes, instead of a 56 px pixel display face.
+- **A sponsor line, not a poster.** Sculk's card and banner are one line with the promo code, so the
+  sidebar belongs to the launcher again.
+
+Everything upstream documents still applies; this README does not repeat it. See the
+[upstream README](https://github.com/gerdaroot/Horizon-Offline-Launcher#readme) for install steps,
+the FAQ, offline play and mod support.
+
+## Updates
+
+This fork updates itself from **its own releases only** (`kodasdream/horizon-unslopped`), signed
+with its own key. An upstream release can never replace this build, so the look stays as it is.
+
+It also follows upstream: every six hours a workflow looks for a new
+[upstream launcher release](https://github.com/gerdaroot/Horizon-Offline-Launcher/releases), merges
+it into this repository and tags a release this repository builds and signs. If the merge conflicts
+because upstream touched a file the UI rewrite changed, nothing is published and an issue names the
+files that need a person.
 
 ## What it is
 
@@ -41,12 +68,12 @@ Everything else works as in Horizon: mods, resource packs, instances, servers, p
 ## Install
 
 <p align="center">
-  <a href="https://github.com/gerdaroot/Horizon-Offline-Launcher/releases/latest/download/Horizon-Offline-Launcher-Setup.exe"><img src="https://img.shields.io/badge/Download%20for%20Windows-Setup.exe-6C4AE0?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows"></a>
+  <a href="https://github.com/kodasdream/horizon-unslopped/releases/latest"><img src="https://img.shields.io/badge/Download%20for%20Windows-Setup.exe-6C4AE0?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows"></a>
 </p>
 
 ### Windows
 
-1. **[Download `Horizon-Offline-Launcher-Setup.exe`](https://github.com/gerdaroot/Horizon-Offline-Launcher/releases/latest/download/Horizon-Offline-Launcher-Setup.exe)**.
+1. **[Download `Horizon-Unslopped-Setup.exe`](https://github.com/kodasdream/horizon-unslopped/releases/latest)**.
 2. **Run it.** If Windows says "Windows protected your PC", click **More info → Run anyway** (the file just isn't code-signed).
 3. **Install → Finish.** The launcher opens by itself; its shortcuts are in the Start menu and, if you ticked it, on the desktop.
 
@@ -58,7 +85,7 @@ No administrator rights needed: it installs for your user only, in `%LOCALAPPDAT
 Win+X → Terminal, then:
 
 ```powershell
-irm https://github.com/gerdaroot/Horizon-Offline-Launcher/releases/latest/download/install.ps1 | iex
+irm https://github.com/kodasdream/horizon-unslopped/releases/latest/download/install.ps1 | iex
 ```
 
 It puts the launcher in the same place, with the same shortcuts.
@@ -67,7 +94,7 @@ It puts the launcher in the same place, with the same shortcuts.
 ### Linux and macOS
 
 ```sh
-curl -fsSL https://github.com/gerdaroot/Horizon-Offline-Launcher/releases/latest/download/install.sh | sh
+curl -fsSL https://github.com/kodasdream/horizon-unslopped/releases/latest/download/install.sh | sh
 ```
 
 Then start it with `horizon-offline-launcher`. On Linux it adds itself to the applications menu.
@@ -102,7 +129,7 @@ Your offline name is changed with the player button at the top right; its skin i
 Windows (needs [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) with "Desktop development with C++"):
 
 ```powershell
-git clone https://github.com/gerdaroot/Horizon-Offline-Launcher
+git clone https://github.com/kodasdream/horizon-unslopped
 cd Horizon-Offline-Launcher
 powershell -ExecutionPolicy Bypass -File build.ps1
 ```
@@ -150,7 +177,7 @@ The game and nearly all of the code are [Horizon](https://github.com/horizon-rus
 **Horizon Offline Launcher** — лаунчер для [Horizon](https://github.com/horizon-rust/horizon) (Minecraft: Java Edition 26.3, переписанный на Rust) без обязательного аккаунта Microsoft и с выбором своего jar.
 
 <p>
-  <a href="https://github.com/gerdaroot/Horizon-Offline-Launcher/releases/latest/download/Horizon-Offline-Launcher-Setup.exe"><b>Скачать для Windows</b></a> ·
+  <a href="https://github.com/kodasdream/horizon-unslopped/releases/latest"><b>Скачать для Windows</b></a> ·
   <a href="#установка">Установка</a> ·
   <a href="#первый-запуск">Первый запуск</a> ·
   <a href="#вопросы">Вопросы</a> ·
@@ -175,12 +202,12 @@ The game and nearly all of the code are [Horizon](https://github.com/horizon-rus
 ### Установка
 
 <p align="center">
-  <a href="https://github.com/gerdaroot/Horizon-Offline-Launcher/releases/latest/download/Horizon-Offline-Launcher-Setup.exe"><img src="https://img.shields.io/badge/%D0%A1%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C%20%D0%B4%D0%BB%D1%8F%20Windows-Setup.exe-6C4AE0?style=for-the-badge&logo=windows&logoColor=white" alt="Скачать для Windows"></a>
+  <a href="https://github.com/kodasdream/horizon-unslopped/releases/latest"><img src="https://img.shields.io/badge/%D0%A1%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C%20%D0%B4%D0%BB%D1%8F%20Windows-Setup.exe-6C4AE0?style=for-the-badge&logo=windows&logoColor=white" alt="Скачать для Windows"></a>
 </p>
 
 **Windows**
 
-1. **[Скачайте `Horizon-Offline-Launcher-Setup.exe`](https://github.com/gerdaroot/Horizon-Offline-Launcher/releases/latest/download/Horizon-Offline-Launcher-Setup.exe)**.
+1. **[Скачайте `Horizon-Unslopped-Setup.exe`](https://github.com/kodasdream/horizon-unslopped/releases/latest)**.
 2. **Запустите его.** Если Windows покажет «Windows защитила ваш компьютер», нажмите **«Подробнее» → «Выполнить в любом случае»** (файл просто не подписан сертификатом).
 3. **«Установить» → «Завершить».** Лаунчер откроется сам; ярлыки — в меню «Пуск» и, если отметили галочку, на рабочем столе.
 
@@ -192,7 +219,7 @@ The game and nearly all of the code are [Horizon](https://github.com/horizon-rus
 Win+X → «Терминал», затем:
 
 ```powershell
-irm https://github.com/gerdaroot/Horizon-Offline-Launcher/releases/latest/download/install.ps1 | iex
+irm https://github.com/kodasdream/horizon-unslopped/releases/latest/download/install.ps1 | iex
 ```
 
 Лаунчер встанет в то же место, с теми же ярлыками.
@@ -201,7 +228,7 @@ irm https://github.com/gerdaroot/Horizon-Offline-Launcher/releases/latest/downlo
 **Linux и macOS:**
 
 ```sh
-curl -fsSL https://github.com/gerdaroot/Horizon-Offline-Launcher/releases/latest/download/install.sh | sh
+curl -fsSL https://github.com/kodasdream/horizon-unslopped/releases/latest/download/install.sh | sh
 ```
 
 После установки лаунчер запускается командой `horizon-offline-launcher`. На Linux он сам добавит себя в меню приложений.
@@ -236,7 +263,7 @@ curl -fsSL https://github.com/gerdaroot/Horizon-Offline-Launcher/releases/latest
 Windows (нужны [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) с «Разработкой классических приложений на C++»):
 
 ```powershell
-git clone https://github.com/gerdaroot/Horizon-Offline-Launcher
+git clone https://github.com/kodasdream/horizon-unslopped
 cd Horizon-Offline-Launcher
 powershell -ExecutionPolicy Bypass -File build.ps1
 ```

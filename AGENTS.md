@@ -1,9 +1,24 @@
-# Horizon Offline Launcher: a map for agents
+# Horizon Unslopped: a map for agents
 
-## This repository is a fork
+## This repository is a fork of a fork
 
-This is **Horizon Offline Launcher** (`gerdaroot/Horizon-Offline-Launcher`), a fork of
-[Horizon](https://github.com/horizon-rust/horizon). The fork changes the launcher only:
+This is **Horizon Unslopped** (`kodasdream/horizon-unslopped`): an unslopped version of
+[Horizon Offline Launcher](https://github.com/gerdaroot/Horizon-Offline-Launcher), itself a fork of
+[Horizon](https://github.com/horizon-rust/horizon). It keeps everything that launcher does and
+replaces its look (the violet night sky, the pixel sunset, the beveled blocks; see
+`docs/design-system.md`, "Quiet"):
+
+- The UI tokens are `crates/horizon-theme/src/night.rs` (`NIGHT`, `DAWN`): a flat neutral ramp and
+  one slate-blue accent. The launcher's frame is `launcher/src/shell.rs`, `plate.rs` and `blocks.rs`;
+  there is no sky module any more.
+- Keep it quiet: flat fills, 1 px hairlines, one corner radius, Geist at four sizes, one accent used
+  once per screen. No gradients, no pixel art, no second hue, no sponsored picture filling the
+  sidebar.
+- `.github/workflows/upstream.yml` merges gerdaroot's launcher releases into this repository every
+  six hours and tags a release this repository builds. A merge that touches the UI conflicts on
+  purpose: resolve the UI files, never revert the redesign to make a merge pass.
+
+The rest of this page describes the launcher this one is built on:
 
 - Playing needs no Microsoft account (`launcher/src/account.rs`: `launch` never refuses;
   `session_for_game` gives an offline start when there is no session). An account is optional, for
@@ -11,11 +26,13 @@ This is **Horizon Offline Launcher** (`gerdaroot/Horizon-Offline-Launcher`), a f
 - The player can pick the client jar (`Settings::minecraft_jar`, `sources::from_jar`, the
   "Choose jar…" row on Home, `horizon-launcher settings minecraft-jar PATH`). Only the pinned 26.3
   release jar is accepted (its sha1 is in `research-lock.json`).
-- Updates come only from this fork (`backend::REPO`, also `horizon-server`'s update.rs), signed with
-  its own key (`crates/horizon-release-sign/release-keys.txt`; the private key is the repository's
-  `RELEASE_SIGNING_KEY` secret). The launcher updates itself unless `HORIZON_LAUNCHER_NO_SELF_UPDATE=1`.
+- Updates come only from **this** fork (`backend::REPO` = `kodasdream/horizon-unslopped`, also
+  `horizon-server`'s update.rs), signed with its own key (`crates/horizon-release-sign/release-keys.txt`;
+  the private key is this repository's `RELEASE_SIGNING_KEY` secret). gerdaroot's releases carry the
+  old UI, and taking one would overwrite the redesign, which is why the repository is not an updater
+  of theirs. The launcher updates itself unless `HORIZON_LAUNCHER_NO_SELF_UPDATE=1`.
 - Releases: a `launcher@X.Y.Z` tag runs `.github/workflows/launcher.yml` (the launcher, GitHub's
-  "latest" release, with the Windows installer `Horizon-Offline-Launcher-Setup.exe` from
+  "latest" release, with the Windows installer `Horizon-Unslopped-Setup.exe` from
   `packaging/windows/setup.iss`, install.ps1 and install.sh). The game ships as Nightlies, as
   upstream's does: running `.github/workflows/game.yml` (input `upstream`, default `nightly`) builds
   this fork's horizon-client, puts it into that upstream release's files (exporters and the rest come
@@ -28,7 +45,7 @@ This is **Horizon Offline Launcher** (`gerdaroot/Horizon-Offline-Launcher`), a f
 - Offline skins and capes: the launcher passes `HORIZON_OFFLINE_SKIN`/`_MODEL` and
   `HORIZON_OFFLINE_CAPE` (`launcher/src/skins.rs`); the client reads them
   (`horizon-client-render/src/skins.rs`, `offline_skin`, `offline_cape`).
-- Install: `Horizon-Offline-Launcher-Setup.exe`, `install.ps1`, `install.sh`, `build.ps1` at the root.
+- Install: `Horizon-Unslopped-Setup.exe`, `install.ps1`, `install.sh`, `build.ps1` at the root.
 
 Upstream's process rules below (Ludovic's attribution lines, PR labels, release batches, the parity
 harnesses) are about upstream's repository; in this fork, commits and PRs carry no agent

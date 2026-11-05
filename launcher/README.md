@@ -291,7 +291,7 @@ set `HORIZON_LAUNCHER_NO_SELF_UPDATE=1` to keep launcher updates with the packag
 Launcher releases are tags: `launcher@X.Y.Z` runs the `launcher` workflow, which builds Linux, macOS
 and Windows and publishes `horizon-launcher-linux-x86_64.tar.gz`, `horizon-launcher-macos-arm64.zip`,
 `horizon-launcher-windows-x64.zip` (what launchers update themselves from) and the Windows installer
-`Horizon-Offline-Launcher-Setup.exe` (`packaging/windows/setup.iss`), signed and marked latest. The version is built in from the tag
+`Horizon-Unslopped-Setup.exe` (`packaging/windows/setup.iss`), signed and marked latest. The version is built in from the tag
 (`HORIZON_LAUNCHER_VERSION`); `Cargo.toml`'s version is only what local builds report.
 
 ## Command line
