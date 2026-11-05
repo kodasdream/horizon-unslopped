@@ -97,9 +97,37 @@ jobs:
           git push origin HEAD:main
           echo "pushed $(git rev-parse --short HEAD)"
 
+      - name: Guard the look
+        id: guard
+        if: steps.merge.outputs.status == 'merged'
+        run: |
+          set -euo pipefail
+          # A clean merge can still undo the redesign: if upstream edits the same tokens back to
+          # their old values on lines this fork did not touch, git takes them silently. So the
+          # tokens themselves are checked, not the merge: the violet, the sky ramp and the pixel
+          # type must stay gone.
+          fail=0
+          say() { echo "::error::$1"; fail=1; }
+          t=crates/horizon-theme/src/night.rs
+          grep -q 'pub const NIGHT: Night = Night {' "$t" || say "$t: the NIGHT palette is gone"
+          # The old look's violet accent and its pale-lavender ink.
+          grep -qiE 'accent: 0x(7656fa|5b3fd6|9a86ff)|accent_hi: 0xa08cff' "$t" \
+            && say "$t: a violet accent came back; this fork's is a slate blue (0x5b7cfa)"
+          # The old sky ramp (violet to sunset), drawn as six bands over every page.
+          grep -q 'sky: \[0x07061a' "$t" && say "$t: the night sky ramp came back"
+          # The pixel display face and the stepped-corner cut, in the launcher's frame.
+          for f in launcher/src/shell.rs launcher/src/plate.rs launcher/src/blocks.rs; do
+            [ -f "$f" ] || { say "$f: missing"; continue; }
+          done
+          grep -q 'pub fn cut(' launcher/src/plate.rs || say "launcher/src/plate.rs: plate::cut is gone (Home and the pages call it)"
+          grep -q 'PIXEL_CORNER' crates/horizon-theme/src/night.rs || true
+          # The look's tests must still pass: they hold the palette to WCAG AA and the accent.
+          [ "$fail" -eq 0 ] || { echo "The merge would change the look; nothing was published."; exit 1; }
+          echo "The look is intact."
+
       - name: Tag and release
         id: release
-        if: steps.merge.outputs.status == 'merged'
+        if: steps.merge.outputs.status == 'merged' && steps.guard.outcome == 'success'
         run: |
           set -euo pipefail
           newest="${{ steps.upstream.outputs.newest }}"
@@ -135,7 +163,7 @@ jobs:
           echo "Tagged $tag (following upstream $newest)"
 
       - name: Report a conflict
-        if: steps.merge.outputs.status == 'conflict'
+        if: steps.merge.outputs.status == 'conflict' || steps.guard.outcome == 'failure'
         uses: actions/github-script@v7
         with:
           script: |
