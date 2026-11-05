@@ -4,6 +4,13 @@ use gpui::{
     canvas, div, fill, point, prelude::*, px, size, Bounds, Div, HitboxBehavior, MouseButton,
     MouseDownEvent, MouseMoveEvent, MouseUpEvent, ScrollHandle, Stateful,
 };
+
+/// A filled rect with rounded corners, for the scrollbar's thumb.
+fn rounded_quad(bounds: Bounds<gpui::Pixels>, color: gpui::Hsla, radius: gpui::Pixels) -> gpui::PaintQuad {
+    let mut quad = fill(bounds, color);
+    quad.corner_radii = gpui::Corners::all(radius);
+    quad
+}
 use std::{cell::Cell, rc::Rc};
 
 /// Space reserved beside scroll content for the track and its padding.
@@ -86,13 +93,15 @@ impl Scrollbar {
                             return;
                         };
                         let hitbox = hitbox.unwrap();
-                        window.paint_quad(fill(bounds, track_color));
-                        window.paint_quad(fill(
+                        // A quiet scrollbar: no track, a slim rounded thumb fading into the page.
+                        let _ = track_color;
+                        window.paint_quad(rounded_quad(
                             Bounds::new(
-                                point(bounds.left() + px(3.), bounds.top() + px(g.top)),
-                                size(bounds.size.width - px(6.), px(g.thumb)),
+                                point(bounds.left() + px(4.), bounds.top() + px(g.top)),
+                                size(px(4.), px(g.thumb)),
                             ),
                             thumb_color,
+                            px(2.),
                         ));
                         window.on_mouse_event({
                             let state = state.clone();

@@ -1651,13 +1651,11 @@ fn hover_fade(
     div().absolute().into_any_element()
 }
 
-/// Text set in one step of the type scale: headings (heading, title, display) in the pixel face.
+/// Text set in one step of the type scale: one family for the whole scale, mono where the step is.
 fn text(step: theme::Step) -> Div {
     let d = div().text_size(px(step.px)).line_height(px(step.line_px()));
     let d = if step.mono {
         d.font_family(theme::MONO)
-    } else if step.px >= theme::HEADING.px {
-        d.font_family(theme::PIXEL)
     } else {
         d
     };
@@ -1752,8 +1750,8 @@ fn button(
     let label = SharedString::from(tr(&label).to_string());
     let t = *t;
     let hover = match kind {
-        Kind::Primary => t.on_face.opacity(0.10),
-        Kind::Secondary => t.bevel.opacity(if t.dark { 0.10 } else { 0.35 }),
+        Kind::Primary => t.on_face.opacity(0.12),
+        Kind::Secondary => t.ink.opacity(0.06),
         Kind::Ghost => t.raised,
     };
     let base = div()
@@ -1764,38 +1762,24 @@ fn button(
         .items_center()
         .justify_center()
         .h(px(theme::CONTROL))
-        .px(px(14.))
-        .font_family(theme::PIXEL)
-        .text_size(px(15.))
+        .px(px(12.))
+        .rounded(px(theme::RADIUS))
+        .font_family(theme::FONT)
+        .text_size(px(13.))
         .font_weight(FontWeight::MEDIUM)
         .cursor_pointer()
-        .child(hover_layer(&id, hover, 0., 0.));
+        .child(hover_layer(&id, hover, theme::RADIUS, 0.));
     let base = match kind {
-        Kind::Primary => base
-            .border_2()
-            .border_color(t.outline)
-            .children(blocks::edges(t.face_bevel, t.face_lip, theme::LIP))
-            .bg(t.face)
-            .text_color(t.on_face),
+        Kind::Primary => base.bg(t.accent).text_color(t.on_accent),
         Kind::Secondary => base
-            .border_2()
-            .border_color(t.outline)
-            .children(blocks::edges(t.button_bevel, t.lip, theme::LIP))
-            .bg(t.button)
+            .bg(t.raised)
+            .border_1()
+            .border_color(t.hairline())
             .text_color(t.ink),
         Kind::Ghost => base.text_color(t.muted).hover(move |s| s.text_color(t.ink)),
     };
-    // The label sits on the block's face, above its lip; pressing pushes it down.
-    let base = base.child(
-        div()
-            .relative()
-            .flex()
-            .items_center()
-            .gap(px(8.))
-            .pb(px(if kind == Kind::Ghost { 0. } else { 2. }))
-            .child(label),
-    );
-    keyboard(track_hover(base, id), &t).active(|s| s.opacity(theme::PRESSED).top(px(1.)))
+    let base = base.child(div().relative().flex().items_center().gap(px(6.)).child(label));
+    keyboard(track_hover(base, id), &t).active(|s| s.opacity(theme::PRESSED))
 }
 
 /// Copies to the clipboard, or into `HORIZON_LAUNCHER_CLIPBOARD` when a test run sets it
@@ -2045,11 +2029,9 @@ fn page_header(title: &str, description: &str, t: &Theme) -> Div {
     div()
         .flex()
         .flex_col()
-        .gap(px(10.))
+        .gap(px(6.)).pt(px(8.))
         .child(
-            blocks::pixel(36., FontWeight::SEMIBOLD)
-                .text_color(t.ink)
-                .child(tr(title).to_string()),
+            text(theme::night::DISPLAY).text_color(t.ink).child(tr(title).to_string()),
         )
         .child(
             text(theme::UI)
