@@ -18,6 +18,14 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-43444a" alt="MIT"></a>
 </p>
 
+<p align="center">
+  <img src="docs/media/launcher-play.webp" alt="Horizon Unslopped's Home page" width="80%">
+</p>
+
+<p align="center">
+  <img src="docs/media/launcher-versions.webp" alt="The Versions page" width="80%">
+</p>
+
 ## What changed
 
 The launcher works exactly as upstream's does: offline play, your own jar, your own skin and cape,
